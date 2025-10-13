@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup - Aadishree</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .error-message { color: red; text-align: center; margin-top: 10px; font-size: 0.9rem; }
+        .auth-logo-header { position: absolute; top: 24px; left: 24px; z-index: 10; }
+        .auth-logo-header img { height: 52px; width: auto; display: block; }
+        @media (max-width: 640px) {
+            .auth-logo-header { top: 16px; left: 16px; }
+            .auth-logo-header img { height: 44px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="auth-logo-header">
+        <a href="index.html">
+            <img src="frontend/uploads/aadishree-03.png" alt="Aadishree logo" />
+        </a>
+    </header>
+    <div class="forms-wrapper">
+        <div class="forms-container">
+        <div class="form-container" id="signup-form">
+            <h1>Sign Up</h1>
+            <p>Create your account to find your photos</p>
+            
+            <div id="signup-error-message" class="error-message" style="display: none;"></div>
+
+            <form id="actual-signup-form" enctype="multipart/form-data">
+                <div class="input-group">
+                    <label for="signup-name">Username</label>
+                    <input type="text" id="signup-name" name="username" placeholder="Choose a username" required>
+                </div>
+                <div class="input-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" name="password" placeholder="Create a password" required>
+                </div>
+                <div class="input-group">
+                    <label for="ref-photo">Your Photo for Recognition</label>
+                    <input type="file" id="ref-photo" name="ref_photo" accept="image/*" required style="padding: 10px; background-color: #333; color:#fff; border-radius: 8px;">
+                </div>
+                <p style="font-size: 0.75rem; color: #ccc; text-align: center; margin-top: -10px; margin-bottom: 15px;">
+                    Upload a clear, forward-facing photo of yourself.
+                </p>
+                <button type="submit" id="signup-btn" class="btn-sign">Create Account</button>
+            </form>
+            <div class="switch-form">
+                Already have an account? <a href="login.html">Log in</a>
+            </div>
+        </div>
+    </div>
+    </div>
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h2>Aadishree</h2>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <ul>
+                            <li><a href="features.html">Features</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+                <p>&copy; <span id="currentYear"></span> Aadishree. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const signupForm = document.getElementById('actual-signup-form');
+            const signupButton = document.getElementById('signup-btn');
+            const errorMessageDiv = document.getElementById('signup-error-message');
+
+            signupForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                errorMessageDiv.style.display = 'none';
+
+                const formData = new FormData(signupForm);
+
+                if (!formData.get('username') || !formData.get('password') || !formData.get('ref_photo').size) {
+                    errorMessageDiv.textContent = 'Please fill out all fields and select a photo.';
+                    errorMessageDiv.style.display = 'block';
+                    return;
+                }
+
+                try {
+                    signupButton.disabled = true;
+                    signupButton.textContent = 'Creating Account...';
+
+                    const response = await fetch('/api/auth/signup', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Signup failed.');
+                    }
+
+                    // On success, redirect to login page
+                    window.location.href = 'login.html';
+
+                } catch (error) {
+                    errorMessageDiv.textContent = error.message;
+                    errorMessageDiv.style.display = 'block';
+                } finally {
+                    signupButton.disabled = false;
+                    signupButton.textContent = 'Create Account';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

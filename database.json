@@ -1,0 +1,109 @@
+{
+    "users": {
+        "demo": {
+            "password": "demo123",
+            "role": "photographer",
+            "ref_photo_path": null
+        },
+        "yogi": {
+            "password": "yogi123",
+            "role": "attendee",
+            "ref_photo_path": "user_profiles/yogi/997780ea-e979-4885-80c7-1e7da0a28b41_PERSON1_2.jpg"
+        },
+        "dq": {
+            "password": "dq123",
+            "role": "attendee",
+            "ref_photo_path": "user_profiles/dq/fc495cc2-6a5b-4cf2-9642-87caa8a3d05a_PERSON1_2.jpg"
+        },
+        "hu": {
+            "password": "hu123",
+            "role": "attendee",
+            "ref_photo_path": "user_profiles/hu/88b535be-ca42-4f03-8788-f3771a451fc7_PERSON1_8.jpg",
+            "google_id": null,
+            "email": null
+        },
+        "demo2": {
+            "password": "12345",
+            "role": "attendee",
+            "ref_photo_path": "user_profiles/demo2/e7686337-8e5b-4ea7-bfe3-a793196ff639_WhatsApp_Image_2025-06-12_at_21.12.33_fa714690.jpg",
+            "google_id": null,
+            "email": null
+        },
+        "demo3": {
+            "password": "12345",
+            "role": "attendee",
+            "ref_photo_path": "user_profiles/demo3/3fdf9234-4948-490f-8c7f-0cb62dcf5d38_WhatsApp_Image_2025-06-12_at_21.12.33_fa714690.jpg",
+            "google_id": null,
+            "email": null
+        },
+        "demo4": {
+            "password": "12345",
+            "role": "attendee",
+            "ref_photo_path": "user_profiles/demo4/85446f1e-a068-4c07-9891-5dafb90515a1_WhatsApp_Image_2025-06-12_at_21.12.33_fa714690.jpg",
+            "google_id": null,
+            "email": null
+        },
+        "diti1": {
+            "password": "12345",
+            "role": "attendee",
+            "ref_photo_path": "user_profiles/diti1/e6e854e3-4e11-4b7c-b2ab-a983c4a26e48_IMG_0278_crop.jpg",
+            "google_id": null,
+            "email": null
+        },
+        "asd": {
+            "password": "asd123",
+            "role": "attendee",
+            "ref_photo_path": "user_profiles/asd/e61253f6-6bfe-48cc-9dda-46a8bc00b274_1db3f4f1-ad7e-4aa6-b385-b3eacbdda996_PERSON1_1.jpg",
+            "google_id": null,
+            "email": null
+        }
+    },
+    "albums": {
+        "demo": {
+            "modi-ji": {
+                "name": "modi ji",
+                "photos": []
+            },
+            "testing": {
+                "name": "Testing",
+                "photos": []
+            },
+            "test2": {
+                "name": "test2",
+                "photos": []
+            },
+            "modi": {
+                "name": "modi",
+                "photos": []
+            },
+            "new": {
+                "name": "new",
+                "photos": []
+            },
+            "new-2": {
+                "name": "new 2",
+                "photos": []
+            },
+            "activity1": {
+                "name": "activity1",
+                "photos": []
+            }
+        }
+    },
+    "user_album_access": {
+        "yogi": [
+            "demo/test2",
+            "demo/testing",
+            "demo/activity1"
+        ],
+        "hu": [
+            "demo/new-2"
+        ],
+        "demo2": [
+            "demo/wedding"
+        ],
+        "demo4": [
+            "demo/activity1"
+        ]
+    }
+}

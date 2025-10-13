@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Photos - Aadishree</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind configuration to match main site
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#8C587C',
+                        'primary-dark': '#7A4969',
+                        'primary-light': '#A06A8F',
+                        secondary: '#E7CBA9',
+                        'dark-color': '#2B2B2B',
+                        'light-color': '#EFEAEB',
+                        'gray-color': '#5E7A99',
+                        'light-gray': '#D1C5C7',
+                        'highlight-accent': '#D98E9C',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Simple spinner for loading state */
+        .spinner {
+            border: 4px solid var(--light-gray);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s ease infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-visual {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .loading-visual .orbit {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(140, 88, 124, 0.45);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: orbitPulse 2.8s ease-in-out infinite;
+        }
+
+        .loading-visual .orbit:nth-child(1) {
+            width: 100%;
+            height: 100%;
+            animation-delay: 0s;
+        }
+
+        .loading-visual .orbit:nth-child(2) {
+            width: 70%;
+            height: 70%;
+            animation-delay: 0.35s;
+        }
+
+        .loading-visual .orbit:nth-child(3) {
+            width: 40%;
+            height: 40%;
+            animation-delay: 0.7s;
+        }
+
+        @keyframes orbitPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.65);
+                opacity: 0.35;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0.65);
+                opacity: 0.35;
+            }
+        }
+
+        /* Professional Lightbox Styles */
+        .lightbox-backdrop {
+            background: rgba(43, 43, 43, 0.95); /* Using dark-color */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .lightbox-container {
+            max-width: 95vw;
+            max-height: 95vh;
+            animation: lightboxFadeIn 0.3s ease-out;
+        }
+
+        .lightbox-image {
+            max-width: 90vw;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 25px 50px -12px rgba(43, 43, 43, 0.8); /* Using dark-color */
+        }
+
+        .lightbox-nav-btn {
+            width: 48px;
+            height: 48px;
+            background: rgba(140, 88, 124, 0.2); /* Using primary-color with opacity */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(140, 88, 124, 0.3); /* Using primary-color with opacity */
+            transition: all 0.2s ease;
+        }
+
+        .lightbox-nav-btn:hover:not(:disabled) {
+            background: rgba(140, 88, 124, 0.4); /* Using primary-color with opacity */
+            transform: scale(1.05);
+        }
+
+        .lightbox-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .lightbox-close-btn {
+            background: rgba(140, 88, 124, 0.2); /* Using primary-color with opacity */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(140, 88, 124, 0.3); /* Using primary-color with opacity */
+            transition: all 0.2s ease;
+        }
+
+        .lightbox-close-btn:hover {
+            background: rgba(140, 88, 124, 0.4); /* Using primary-color with opacity */
+            transform: scale(1.05);
+        }
+
+        @keyframes lightboxFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Photo Grid Enhancements */
+        .photo-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .photo-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(43, 43, 43, 0.15); /* Using dark-color */
+        }
+
+        .photo-overlay {
+            background: linear-gradient(
+                135deg,
+                rgba(140, 88, 124, 0) 0%, /* Using primary-color */
+                rgba(140, 88, 124, 0.1) 50%, /* Using primary-color */
+                rgba(140, 88, 124, 0.3) 100% /* Using primary-color */
+            );
+        }
+    </style>
+</head>
+<body class="bg-light-color font-sans">
+
+    <!-- Simple Header -->
+    <header class="bg-white shadow-sm border-b border-light-gray">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="index.html" class="flex items-center space-x-3">
+                    <img src="frontend/uploads/aadishree-03.png" alt="Aadishree logo" class="h-10 w-auto" />
+                    <span class="text-2xl font-bold text-primary">Aadishree</span>
+                </a>
+                <div class="hidden sm:flex items-center space-x-3 text-sm text-gray-color">
+                    <i class="fas fa-camera-retro"></i>
+                    <span>Face Recognition Photography</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+
+        <div id="view-loading" class="text-center py-20">
+            <div class="loading-visual" aria-hidden="true">
+                <span class="orbit"></span>
+                <span class="orbit"></span>
+                <span class="orbit"></span>
+            </div>
+            <div class="spinner" aria-hidden="true"></div>
+            <p id="loading-message" class="mt-6 text-gray-color text-lg">Loading Event...</p>
+            <p id="loading-subtext" class="mt-2 text-sm text-gray-color opacity-80">This usually takes just a few seconds.</p>
+        </div>
+
+        <div id="view-guest" class="hidden max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg text-center mt-12">
+            <h1 id="event-title-guest" class="text-2xl font-bold text-dark-color mb-2">Welcome to the Event</h1>
+            <p class="text-gray-color mb-6">To see photos of yourself, please log in or create an account.</p>
+            <div class="space-y-4">
+                <a href="login.html" id="login-btn-guest" class="w-full block bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors">Log In</a>
+                <a href="signin.html" id="signup-btn-guest" class="w-full block bg-light-gray text-dark-color py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">Sign Up</a>
+            </div>
+             <p class="text-xs text-gray-color mt-4">You'll be asked to upload a clear photo for face recognition during sign up!</p>
+        </div>
+
+        <div id="view-gallery" class="hidden">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+                <h1 id="event-title-main" class="text-3xl font-bold text-dark-color"></h1>
+                <button id="download-all-btn" class="w-full sm:w-auto flex-shrink-0 bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center space-x-2">
+                    <i class="fas fa-download"></i>
+                    <span>Download All</span>
+                </button>
+            </div>
+            <div id="photos-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                </div>
+        </div>
+
+    </main>
+
+    <!-- Professional Lightbox Modal -->
+    <div id="lightbox-modal" class="fixed inset-0 lightbox-backdrop flex items-center justify-center z-50 hidden">
+        <div class="lightbox-container relative flex flex-col items-center">
+            <!-- Close Button -->
+            <button id="close-lightbox" class="lightbox-close-btn absolute -top-12 -right-12 w-10 h-10 rounded-full text-white flex items-center justify-center z-10" title="Close (Esc)">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            
+            <!-- Image Container -->
+            <div class="relative">
+                <img id="lightbox-image" src="" alt="Event photo" class="lightbox-image">
+                
+                <!-- Navigation Buttons -->
+                <button id="lightbox-prev" class="lightbox-nav-btn absolute left-4 top-1/2 transform -translate-y-1/2 rounded-full text-white flex items-center justify-center" title="Previous (←)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="lightbox-next" class="lightbox-nav-btn absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full text-white flex items-center justify-center" title="Next (→)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <!-- Photo Info -->
+            <div class="mt-4 text-center">
+                <div id="lightbox-caption" class="text-white text-sm opacity-80 mb-2"></div>
+                <div id="lightbox-counter" class="text-white text-xs opacity-60"></div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="mt-4 flex space-x-3">
+                <button id="lightbox-download" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg flex items-center space-x-2 transition-colors" title="Download Photo">
+                    <i class="fas fa-download"></i>
+                    <span>Download</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h2>Aadishree</h2>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <ul>
+                            <li><a href="features.html">Features</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+                <p>&copy; <span id="currentYear"></span> Aadishree. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/event.js"></script>
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

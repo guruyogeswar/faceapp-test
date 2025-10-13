@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .error-message { color: red; text-align: center; margin-top: 10px; }
+        .auth-logo-header { position: absolute; top: 24px; left: 24px; z-index: 10; }
+        .auth-logo-header img { height: 52px; width: auto; display: block; }
+        @media (max-width: 640px) {
+            .auth-logo-header { top: 16px; left: 16px; }
+            .auth-logo-header img { height: 44px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="auth-logo-header">
+        <a href="index.html">
+            <img src="frontend/uploads/aadishree-03.png" alt="Aadishree logo" />
+        </a>
+    </header>
+    <div class="forms-wrapper">
+        <div class="forms-container">
+            <div class="form-container login-container" id="login-form-container">
+                <h1>Log In</h1>
+                <div class="social-login">
+                    <button onclick="window.location.href='/api/auth/google/login'" class="social-btn google"><i class="fab fa-google"></i> Sign in with Google</button>
+                    <!-- <button class="social-btn apple"><i class="fab fa-apple"></i> Sign in with Apple</button> -->
+                </div>
+                <div class="divider">or</div>
+                <form id="actual-login-form">
+                    <div class="input-group">
+                        <label for="login-email">Username</label>
+                        <input type="text" id="login-email" placeholder="Enter your username" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="Enter your password" required>
+                    </div>
+                    <div class="form-footer">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="remember-me"> <span class="checkmark"></span>
+                            Remember me
+                        </label>
+                        <a href="#" class="forgot-password">Forgot Password?</a>
+                    </div>
+                    <button type="submit" id="login-btn" class="btn-sign">Log In</button>
+                </form>
+                <div id="login-error-message" class="error-message" style="display: none;"></div>
+                <div class="switch-form">
+                    Don't have an account? <a href="signin.html">Sign up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h2>Aadishree</h2>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <ul>
+                            <li><a href="features.html">Features</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+                <p>&copy; <span id="currentYear"></span> Aadishree. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('actual-login-form');
+            const loginButton = document.getElementById('login-btn');
+            const emailInput = document.getElementById('login-email');
+            const passwordInput = document.getElementById('login-password');
+            const errorMessageDiv = document.getElementById('login-error-message');
+            const apiClient = new APIClient();
+
+            // Function to grant album access after login
+            async function grantAccessAndRedirect(token) {
+                const photographer = localStorage.getItem('pendingAccess_photographer');
+                const albumId = localStorage.getItem('pendingAccess_albumId');
+                
+                if (photographer && albumId) {
+                    try {
+                        await fetch('/api/grant-access', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ photographer, album_id: albumId })
+                        });
+                    } catch (err) {
+                        console.error("Failed to grant access:", err);
+                    } finally {
+                        localStorage.removeItem('pendingAccess_photographer');
+                        localStorage.removeItem('pendingAccess_albumId');
+                    }
+                }
+                
+                // Redirect user
+                const redirectUrl = localStorage.getItem('postLoginRedirectUrl');
+                if (redirectUrl) {
+                    localStorage.removeItem('postLoginRedirectUrl');
+                    window.location.href = redirectUrl;
+                } else {
+                    window.location.href = 'albums.html'; // Default redirect
+                }
+            }
+            
+            loginForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const username = emailInput.value.trim();
+                const password = passwordInput.value.trim();
+                errorMessageDiv.style.display = 'none';
+
+                if (!username || !password) {
+                    errorMessageDiv.textContent = 'Please enter both username and password.';
+                    errorMessageDiv.style.display = 'block';
+                    return;
+                }
+
+                try {
+                    loginButton.disabled = true;
+                    loginButton.textContent = 'Logging in...';
+                    const response = await apiClient.login(username, password);
+                    
+                    // Call the new function to handle access grant and redirection
+                    await grantAccessAndRedirect(response.token);
+
+                } catch (error) {
+                    errorMessageDiv.textContent = error.message || 'Login failed.';
+                    errorMessageDiv.style.display = 'block';
+                } finally {
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Log In';
+                }
+            });
+            
+            // Placeholder for Google Login button
+            document.getElementById('google-login-btn').addEventListener('click', () => {
+                alert("Redirecting to Google Sign-in... (This is a simulation)");
+                // In a real app, this would be: window.location.href = '/api/auth/google/login';
+            });
+        });
+    </script>
+</body>
+</html>
