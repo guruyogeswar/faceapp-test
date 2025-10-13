@@ -87,6 +87,12 @@ class DatabaseConfig:
     def __init__(self):
         # Use SQLite for development, easily switchable to PostgreSQL/MySQL for production
         db_url = os.environ.get('DATABASE_URL', 'sqlite:///face_recognition_app.db')
+        display_url = db_url
+        if db_url.startswith('postgresql://') and '@' in db_url:
+            user_info, host_part = db_url.split('@', 1)
+            user_mask = user_info.split('://', 1)[-1].split(':', 1)[0]
+            display_url = f"postgresql://{user_mask}:***@{host_part}"
+        print(f"DatabaseConfig: connecting using {display_url}")
         
         # Handle PostgreSQL URL format (for production)
         if db_url.startswith('postgres://'):
