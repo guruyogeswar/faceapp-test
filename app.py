@@ -305,6 +305,18 @@ def grant_access_endpoint():
         
     granted, message = grant_album_access(attendee_username, photographer, album_id)
 
+    print(
+        "grant_access_endpoint:",
+        {
+            "attendee": attendee_username,
+            "photographer": photographer,
+            "album": album_id,
+            "granted": granted,
+            "message": message,
+        },
+        flush=True,
+    )
+
     if granted:
         return jsonify({"message": message}), 200
 
