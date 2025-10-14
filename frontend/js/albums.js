@@ -478,9 +478,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             for (const file of files) {
                 const formData = new FormData();
                 formData.append('file', file);
-                formData.append('album_id', albumId);
+                formData.append('album', albumId);
                 
-                const response = await fetch('/api/upload', {
+                const response = await fetch('/api/upload-single-file', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
