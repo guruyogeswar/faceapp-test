@@ -379,6 +379,15 @@ h3 { font-size: 1.75rem; }
     box-shadow: 0 0 0 2px var(--white-color), 0 0 0 4px var(--primary-light-color);
 }
 .profile-initials-text { font-size: 0.875rem; font-weight: 600; }
+.profile-dropdown-button img,
+.profile-initials-avatar img,
+.profile-initials-avatar-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    display: block;
+}
 
 .profile-dropdown-menu {
     /* display: none; JS toggles 'hidden' class */
@@ -488,19 +497,6 @@ h3 { font-size: 1.75rem; }
 .trust-badges { display: flex; gap: 1.5rem; color: var(--gray-color-text); font-size: 0.875rem; }
 .trust-badges span { display: flex; align-items: center; gap: 0.5rem; }
 .image-container { position: relative; border-radius: 1rem; overflow: hidden; box-shadow: var(--shadow-lg); }
-
-/* Before-After Slider */
-.before-after-slider { position: relative; width: 100%; height: 400px; overflow: hidden; }
-.before-image, .after-image { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
-.before-image { left: 0; width: 50%; z-index: 2; }
-.after-image { right: 0; }
-.before-image img, .after-image img { position: absolute; width: 200%; height: 100%; object-fit: cover; }
-.before-image img { left: 0; }
-.after-image img { left: -100%; }
-.slider-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); z-index: 3; cursor: ew-resize; }
-.slider-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background-color: white; transform: translateX(-50%); }
-.slider-button { position: absolute; top: 50%; left: 50%; width: 40px; height: 40px; background-color: white; border-radius: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow); }
-.slider-button i { color: var(--primary-color); font-size: 0.75rem; }
 
 /* Features Section (from style.css) */
 .features { padding: 6rem 0; background-color: white; }
