@@ -221,3 +221,18 @@ def update_user_reference_photo(
         return True
     finally:
         session.close()
+
+
+def update_user_password(username: str, new_password: str) -> bool:
+    """Persist a new password for the given user."""
+    session = db_config.get_session()
+    try:
+        user = session.query(User).filter_by(username=username).first()
+        if not user:
+            return False
+
+        user.password = new_password
+        session.commit()
+        return True
+    finally:
+        session.close()

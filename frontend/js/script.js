@@ -128,6 +128,77 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Hamburger logic removed - handled by gloabal_auth.js
 
+    // Before-after image slider
+    const sliderHandle = document.querySelector('.slider-handle');
+    const beforeImage = document.querySelector('.before-image');
+    
+    if (sliderHandle && beforeImage) {
+        let isDragging = false;
+
+        const slider = document.querySelector('.before-after-slider');
+
+        function setSliderPosition(x) {
+            const sliderWidth = slider.offsetWidth;
+            let position = (x / sliderWidth) * 100;
+            position = Math.max(0, Math.min(position, 100));
+            
+            sliderHandle.style.left = `${position}%`;
+            beforeImage.style.width = `${position}%`;
+        }
+
+        sliderHandle.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            e.preventDefault();
+        });
+
+        slider.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            const rect = slider.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            setSliderPosition(x);
+            e.preventDefault();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        slider.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const rect = slider.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                setSliderPosition(x);
+            }
+        });
+
+        // For touch devices
+        sliderHandle.addEventListener('touchstart', () => {
+            isDragging = true;
+        }, { passive: true });
+
+        slider.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            const rect = slider.getBoundingClientRect();
+            const x = e.touches[0].clientX - rect.left;
+            setSliderPosition(x);
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            isDragging = false;
+        }, { passive: true });
+
+        slider.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                const rect = slider.getBoundingClientRect();
+                const x = e.touches[0].clientX - rect.left;
+                setSliderPosition(x);
+            }
+        }, { passive: true });
+
+        // Ensure initial state keeps both images aligned with handle position
+        setSliderPosition(slider.offsetWidth / 2);
+    }
+
     // Pricing toggle
     const pricingToggle = document.getElementById('pricing-toggle');
     

@@ -19,6 +19,7 @@ from db import (
     get_accessible_albums_for_user,
     get_albums_for_photographer,
     update_user_reference_photo,
+    update_user_password,
     init_db,
 )
 from auth import create_token, verify_token, authenticate_user
@@ -35,7 +36,7 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'heic'}
 
 
 def _local_reference_photo_path(ref_photo_path: str) -> str:
@@ -269,6 +270,106 @@ def verify_auth_token():
         })
     except Exception as e:
         return jsonify({"valid": False, "error": str(e)}), 401
+
+
+@app.route('/api/profile/photo', methods=['POST'])
+def update_profile_photo():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        payload = verify_token(token)
+        username = payload['sub']
+    except Exception as exc:
+        return jsonify({"error": "Authentication required", "details": str(exc)}), 401
+
+    if 'avatar' not in request.files:
+        return jsonify({"error": "No photo uploaded."}), 400
+
+    avatar_file = request.files['avatar']
+    if not avatar_file or avatar_file.filename == '':
+        return jsonify({"error": "No photo selected."}), 400
+
+    if not allowed_file(avatar_file.filename):
+        return jsonify({"error": "Unsupported file type."}), 400
+
+    max_bytes = 3 * 1024 * 1024
+    file_size = avatar_file.content_length
+    if file_size is None:
+        try:
+            avatar_file.stream.seek(0, os.SEEK_END)
+            file_size = avatar_file.stream.tell()
+            avatar_file.stream.seek(0)
+        except Exception:
+            file_size = None
+    if file_size is None:
+        content_length = request.content_length
+        if content_length and content_length > max_bytes:
+            file_size = content_length
+    if file_size and file_size > max_bytes:
+        return jsonify({"error": "File too large. Max size is 3 MB."}), 400
+
+    filename = secure_filename(avatar_file.filename)
+    unique_name = f"{uuid.uuid4()}_{filename}"
+    local_path = os.path.join(UPLOAD_FOLDER, unique_name)
+    avatar_file.save(local_path)
+
+    r2_path = f"user_profiles/{username}/{unique_name}"
+    upload_success, public_url = upload_to_r2(local_path, r2_path)
+
+    try:
+        os.remove(local_path)
+    except OSError:
+        pass
+
+    if not upload_success or not public_url:
+        return jsonify({"error": "Could not upload photo."}), 500
+
+    user = get_user(username)
+    previous_path = user.ref_photo_path if user else None
+
+    if not update_user_reference_photo(username, r2_path):
+        delete_from_r2(r2_path)
+        return jsonify({"error": "User not found."}), 404
+
+    if previous_path and previous_path != r2_path:
+        delete_from_r2(previous_path)
+
+    return jsonify({
+        "message": "Profile photo updated.",
+        "photo_url": public_url
+    })
+
+
+@app.route('/api/profile/password', methods=['POST'])
+def update_profile_password():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        payload = verify_token(token)
+        username = payload['sub']
+    except Exception as exc:
+        return jsonify({"error": "Authentication required", "details": str(exc)}), 401
+
+    data = request.get_json(silent=True) or {}
+    current_password = (data.get('currentPassword') or '').strip()
+    new_password = (data.get('newPassword') or '').strip()
+
+    if not new_password or len(new_password) < 8:
+        return jsonify({"error": "New password must be at least 8 characters."}), 400
+
+    user = get_user(username)
+    if not user:
+        return jsonify({"error": "User not found."}), 404
+
+    stored_password = user.password or ''
+    if stored_password and stored_password != current_password:
+        return jsonify({"error": "Current password is incorrect."}), 400
+
+    if stored_password == new_password:
+        return jsonify({"error": "New password must be different."}), 400
+
+    if not update_user_password(username, new_password):
+        return jsonify({"error": "Unable to update password."}), 500
+
+    return jsonify({"message": "Password updated successfully."})
 
 @app.route('/api/album/<photographer_username>/<album_id>/share', methods=['GET'])
 def get_shareable_link(photographer_username, album_id):

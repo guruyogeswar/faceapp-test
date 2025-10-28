@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Manage Your Account • Aadishree</title>
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+	<header class="header-main">
+		<div class="container header-container">
+			<nav class="header-nav">
+				<div class="header-logo">
+					<a href="index.html">
+						<img src="frontend/uploads/aadishree-03.png" alt="Aadishree logo" />
+					</a>
+				</div>
+				<div class="nav-links-desktop" id="navLinks">
+					<a href="index.html" class="nav-link-item">Home</a>
+					<a href="features.html" class="nav-link-item">Features</a>
+					<a href="albums.html" class="nav-link-item">Albums</a>
+					<a href="contact.html" class="nav-link-item">Contact Us</a>
+				</div>
+				<div class="auth-links-desktop">
+					<a href="getaquote.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Ask for Quote</a>
+					<div id="profileDropdownContainer" class="profile-dropdown" style="display: none;">
+						<button id="profileDropdownButton" class="profile-dropdown-button" aria-expanded="false" aria-haspopup="true">
+							<span id="profileInitials" class="profile-initials-text">AD</span>
+						</button>
+						<div id="profileDropdownMenu" class="profile-dropdown-menu hidden">
+							<div class="profile-dropdown-header">
+								<div class="profile-user-info">
+									<div class="profile-initials-avatar">
+										<span id="dropdownProfileInitials">AD</span>
+									</div>
+									<div>
+										<p id="dropdownUserName" class="profile-user-name">Alex Doe</p>
+										<p id="dropdownUserEmail" class="profile-user-email">alex.doe@example.com</p>
+									</div>
+								</div>
+								<a href="manage_account.html" id="manageAccountLink" class="profile-manage-link">Manage your Account</a>
+							</div>
+							<div class="profile-dropdown-footer">
+								<a href="#" id="logoutBtnDropdown" class="profile-dropdown-item logout-link">
+									<i class="fas fa-sign-out-alt icon-prefix"></i>Sign out
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="hamburger-menu-container">
+					<button id="hamburger" aria-label="Open menu" aria-expanded="false" class="hamburger-button">
+						<i class="fas fa-bars icon-menu-open"></i>
+						<i class="fas fa-times icon-menu-close" style="display:none;"></i>
+					</button>
+				</div>
+			</nav>
+		</div>
+		<div class="mobile-nav-menu hidden" id="mobileNavLinksMenu">
+			<a href="index.html" class="nav-link-item-mobile">Home</a>
+			<a href="features.html" class="nav-link-item-mobile">Features</a>
+			<a href="albums.html" class="nav-link-item-mobile">Albums</a>
+			<a href="contact.html" class="nav-link-item-mobile">Contact Us</a>
+			<div class="mobile-auth-section">
+				<a href="getaquote.html" id="loginBtnNavMobile" class="btn btn-secondary btn-sm btn-full-width btn-margin-bottom">Ask for Quote</a>
+				<div id="profileContainerMobile" style="display:none;">
+					<div class="profile-user-info-mobile">
+						<div class="profile-initials-avatar-sm">
+							<span id="profileInitialsMobile">AD</span>
+						</div>
+						<div>
+							<p id="userNameMobile" class="profile-user-name-sm">Alex Doe</p>
+							<p id="userEmailMobile" class="profile-user-email-sm">alex.doe@example.com</p>
+						</div>
+					</div>
+					<a href="#" id="logoutBtnNavMobile" class="btn btn-danger-outline btn-sm btn-full-width">
+						<i class="fas fa-sign-out-alt icon-prefix"></i>Sign Out
+					</a>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<!-- <section class="account-hero">
+		<div class="container">
+			<div class="account-hero-grid">
+				<div class="account-hero-text">
+					<p class="account-hero-eyebrow">Account Center</p>
+					<h1>Manage your account</h1>
+					<p>Keep your profile current, review your subscription, and stay in control of your security preferences from a single dashboard.</p>
+					<div class="account-hero-stats">
+						<div class="account-hero-stat">
+							<span class="stat-label">Profile completion</span>
+							<span class="stat-value" id="profileCompletion">82%</span>
+						</div>
+						<div class="account-hero-stat">
+							<span class="stat-label">Last update</span>
+							<span class="stat-value">3 days ago</span>
+						</div>
+						<div class="account-hero-stat">
+							<span class="stat-label">Active sessions</span>
+							<span class="stat-value" id="activeSessionCount">2</span>
+						</div>
+					</div>
+				</div>
+				<div class="account-hero-card">
+					<h3>Quick actions</h3>
+					<p>Update your most important details without digging through menus.</p>
+					<div class="account-quick-actions">
+						<a href="#personal-info" class="btn btn-primary btn-full-width">Update profile</a>
+						<a href="#security" class="btn btn-outline btn-full-width">Manage security</a>
+						<a href="#notifications" class="btn btn-neutral btn-full-width">Notification settings</a>
+					</div>
+					<div class="account-hero-hint">
+						<i class="fas fa-shield-alt"></i>
+						<p>We encrypt your data using enterprise-grade security. Changes go live instantly.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section> -->
+
+	<section class="account-dashboard">
+		<div class="container account-layout">
+			<aside class="account-sidebar">
+				<div class="account-card account-profile-card">
+					<div class="account-profile-avatar" id="accountAvatar">
+						<img id="accountAvatarImage" class="account-avatar-image" alt="Profile photo" />
+						<span id="accountAvatarInitials">AD</span>
+					</div>
+					<h2 id="accountUserName">Alex Doe</h2>
+					<p id="accountUserEmail" class="account-user-email">alex.doe@example.com</p>
+					<button type="button" class="btn btn-outline btn-full-width" id="uploadAvatarBtn">Upload new photo</button>
+					<input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
+					<p class="account-upload-hint">JPG, PNG, or HEIC up to 3&nbsp;MB.</p>
+					<p id="avatarUploadStatus" class="account-feedback" aria-live="polite"></p>
+				</div>
+
+				<!-- <div class="account-card account-plan-card">
+					<div class="account-plan-header">
+						<h3>Current plan</h3>
+						<span class="account-plan-status" id="billingStatus">Active</span>
+					</div>
+					<p class="account-plan-name" id="accountPlanName">Professional Studio</p>
+					<p class="account-plan-price" id="accountPlanPrice">$49<span>/month</span></p>
+					<ul class="account-plan-benefits">
+						<li><i class="fas fa-check"></i> Unlimited album deliveries</li>
+						<li><i class="fas fa-check"></i> 2 TB secure cloud backup</li>
+						<li><i class="fas fa-check"></i> Face recognition tagging</li>
+						<li><i class="fas fa-check"></i> Priority event support</li>
+					</ul>
+					<div class="account-plan-actions">
+						<a href="#" class="btn btn-primary btn-full-width">Upgrade plan</a>
+						<a href="#" class="btn btn-outline btn-full-width">Download invoices</a>
+					</div>
+					<p class="account-plan-note">Next billing cycle on <span id="nextBillingDate">Nov 12, 2025</span>.</p>
+				</div> -->
+
+				<div class="account-card account-support-card">
+					<h3>Need help?</h3>
+					<p>Reach out to our concierge team for anything from billing questions to onboarding consultations.</p>
+					<div class="account-support-channels">
+						<a href="mailto:support@aadishree.com" class="support-chip"><i class="fas fa-envelope"></i>Email support</a>
+						<a href="contact.html" class="support-chip"><i class="fas fa-comments"></i>Schedule a call</a>
+					</div>
+					<a href="contact.html" class="btn btn-secondary btn-full-width">Contact support</a>
+				</div>
+			</aside>
+
+			<div class="account-main">
+				<div class="account-card account-section-card" id="personal-info">
+					<div class="account-card-heading">
+						<div>
+							<h3>Personal information</h3>
+							<p>These details appear on proposals, invoices, and client communications.</p>
+						</div>
+						<span class="account-status-pill success">Verified</span>
+					</div>
+					<form class="account-form" id="accountProfileForm">
+						<div class="account-form-grid">
+							<div class="form-field">
+								<label for="firstName">First name</label>
+								<input type="text" id="firstName" name="firstName" placeholder="Alex">
+							</div>
+							<div class="form-field">
+								<label for="lastName">Last name</label>
+								<input type="text" id="lastName" name="lastName" placeholder="Doe">
+							</div>
+							<div class="form-field">
+								<label for="emailAddress">Email address</label>
+								<input type="email" id="emailAddress" name="emailAddress" placeholder="alex.doe@example.com">
+							</div>
+							<div class="form-field">
+								<label for="phoneNumber">Phone number</label>
+								<input type="tel" id="phoneNumber" name="phoneNumber" placeholder="+1 (555) 012-3456">
+							</div>
+						</div>
+						<div class="account-form-actions">
+							<button type="reset" class="btn btn-neutral">Reset</button>
+							<button type="submit" class="btn btn-primary">Save changes</button>
+						</div>
+					</form>
+				</div>
+
+				<div class="account-card account-section-card" id="security">
+					<div class="account-card-heading">
+						<div>
+							<h3>Security &amp; sign-in</h3>
+							<p>Strengthen your sign-in experience and keep your sessions secured.</p>
+						</div>
+					</div>
+					<div class="account-security-list">
+						<div class="account-security-item">
+							<div>
+								<h4>Password</h4>
+								<p>Keep your password unique and update it regularly.</p>
+							</div>
+							<button type="button" class="btn btn-outline btn-sm" id="updatePasswordBtn">Update</button>
+						</div>
+					</div>
+					<form id="passwordUpdateForm" class="account-password-form" novalidate>
+						<div class="account-password-grid">
+							<div class="form-field">
+								<label for="currentPassword">Current password</label>
+								<input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+							</div>
+							<div class="form-field">
+								<label for="newPassword">New password</label>
+								<input type="password" id="newPassword" name="newPassword" placeholder="At least 8 characters" minlength="8">
+							</div>
+							<div class="form-field">
+								<label for="confirmPassword">Confirm new password</label>
+								<input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter new password">
+							</div>
+						</div>
+						<div class="account-password-actions">
+							<button type="submit" class="btn btn-primary btn-sm">Save password</button>
+						</div>
+						<p id="passwordUpdateStatus" class="account-feedback" aria-live="polite"></p>
+					</form>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="account-help">
+		<div class="container account-help-wrapper">
+			<div class="account-help-text">
+				<h2>Partner with our onboarding team</h2>
+				<p>Need assistance migrating albums, setting up automations, or training your crew? We offer white-glove onboarding for growing studios.</p>
+				<div class="account-help-highlights">
+					<span><i class="fas fa-headset"></i>Dedicated implementation specialist</span>
+					<span><i class="fas fa-clock"></i>Response time under 2 hours</span>
+					<span><i class="fas fa-people-carry"></i>Hands-on migration support</span>
+				</div>
+			</div>
+			<div class="account-help-card">
+				<h3>Schedule a strategy session</h3>
+				<p>We will audit your account setup, recommend best practices, and share optimization tips tailored to your workflows.</p>
+				<a href="contact.html" class="btn btn-primary btn-full-width">Book a call</a>
+				<a href="contact.html" class="btn btn-outline btn-full-width">Send a message</a>
+			</div>
+		</div>
+	</section>
+
+	<footer>
+		<div class="container">
+			<div class="footer-content">
+				<div class="footer-logo">
+					<h2>Aadishree</h2>
+				</div>
+				<div class="footer-links">
+					<div class="footer-column">
+						<ul>
+							<li><a href="features.html">Features</a></li>
+							<li><a href="contact.html">Contact</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<div class="social-links">
+					<a href="#"><i class="fab fa-twitter"></i></a>
+					<a href="#"><i class="fab fa-facebook-f"></i></a>
+					<a href="#"><i class="fab fa-instagram"></i></a>
+					<a href="#"><i class="fab fa-linkedin-in"></i></a>
+				</div>
+				<p>&copy; <span id="currentYear"></span> Aadishree. All rights reserved.</p>
+			</div>
+		</div>
+	</footer>
+
+	<script>
+		document.getElementById('currentYear').textContent = new Date().getFullYear();
+	</script>
+	<script src="js/script.js"></script>
+	<script src="js/gloabal_auth.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const authToken = localStorage.getItem('authToken');
+			if (!authToken) {
+				window.location.href = 'login.html';
+				return;
+			}
+
+			const storedName = localStorage.getItem('username');
+			const storedEmail = localStorage.getItem('userEmail') || localStorage.getItem('email');
+			let storedPhoto = localStorage.getItem('ref_photo_url');
+			const planFromStorage = localStorage.getItem('subscriptionTier');
+			const firstNameField = document.getElementById('firstName');
+			const lastNameField = document.getElementById('lastName');
+			const emailField = document.getElementById('emailAddress');
+			const accountNameEl = document.getElementById('accountUserName');
+			const accountEmailEl = document.getElementById('accountUserEmail');
+			const avatarEl = document.getElementById('accountAvatar');
+			const avatarInitialsEl = document.getElementById('accountAvatarInitials');
+			const avatarImageEl = document.getElementById('accountAvatarImage');
+			const avatarUploadBtn = document.getElementById('uploadAvatarBtn');
+			const avatarFileInput = document.getElementById('avatarFileInput');
+			const avatarUploadStatus = document.getElementById('avatarUploadStatus');
+			const profileForm = document.getElementById('accountProfileForm');
+			const planBadgeEl = document.getElementById('planBadge');
+			const planNameEl = document.getElementById('accountPlanName');
+			const passwordForm = document.getElementById('passwordUpdateForm');
+			const passwordStatusEl = document.getElementById('passwordUpdateStatus');
+			const updatePasswordBtn = document.getElementById('updatePasswordBtn');
+			const maxAvatarBytes = 3 * 1024 * 1024;
+			const bustCache = (url) => (url ? `${url}${url.includes('?') ? '&' : '?'}v=${Date.now()}` : null);
+
+			const fallbackName = accountNameEl?.textContent?.trim() || 'User';
+			const activeName = storedName && storedName.trim() ? storedName.trim() : fallbackName;
+			const initials = activeName.substring(0, 1).toUpperCase();
+
+			function displayStatus(element, message, type) {
+				if (!element) return;
+				element.textContent = message;
+				element.classList.remove('error', 'success');
+				if (type) {
+					element.classList.add(type);
+				}
+			}
+
+			function updateNavAvatars(photoUrl, fallbackInitials) {
+				const dropdownButton = document.getElementById('profileDropdownButton');
+				const dropdownAvatar = document.getElementById('dropdownProfileInitials');
+				const mobileAvatar = document.getElementById('profileInitialsMobile');
+				if (photoUrl) {
+					const imgMarkup = `<img src="${photoUrl}" alt="${activeName}" class="w-full h-full object-cover rounded-full">`;
+					if (dropdownButton) dropdownButton.innerHTML = imgMarkup;
+					if (dropdownAvatar) dropdownAvatar.innerHTML = imgMarkup;
+					if (mobileAvatar) mobileAvatar.innerHTML = imgMarkup;
+				} else {
+					if (dropdownButton) dropdownButton.innerHTML = `<span class="profile-initials-text">${fallbackInitials}</span>`;
+					if (dropdownAvatar) dropdownAvatar.textContent = fallbackInitials;
+					if (mobileAvatar) mobileAvatar.textContent = fallbackInitials;
+				}
+			}
+
+			if (accountNameEl) {
+				accountNameEl.textContent = activeName;
+			}
+			if (storedName && firstNameField && lastNameField) {
+				const parts = storedName.trim().split(/\s+/);
+				firstNameField.value = parts[0] || '';
+				lastNameField.value = parts.length > 1 ? parts.slice(1).join(' ') : '';
+			}
+
+			const fallbackEmail = activeName ? `${activeName.replace(/\s+/g, '.').toLowerCase()}@example.com` : 'you@example.com';
+			if (accountEmailEl) accountEmailEl.textContent = storedEmail || fallbackEmail;
+			if (emailField) emailField.value = storedEmail || fallbackEmail;
+
+			const initialPhotoUrl = bustCache(storedPhoto);
+
+			if (storedPhoto && avatarEl) {
+				avatarEl.classList.add('account-profile-avatar-has-image');
+				if (avatarImageEl) {
+					avatarImageEl.src = initialPhotoUrl;
+					avatarImageEl.alt = `Profile photo of ${activeName}`;
+				}
+				if (avatarInitialsEl) avatarInitialsEl.textContent = '';
+			} else {
+				avatarEl?.classList.remove('account-profile-avatar-has-image');
+				if (avatarImageEl) {
+					avatarImageEl.removeAttribute('src');
+				}
+				if (avatarInitialsEl) {
+					avatarInitialsEl.textContent = initials;
+				}
+			}
+
+			updateNavAvatars(initialPhotoUrl, initials);
+
+			if (planFromStorage && planBadgeEl) {
+				planBadgeEl.textContent = planFromStorage;
+				if (planNameEl) planNameEl.textContent = `${planFromStorage} Plan`;
+			}
+
+			profileForm?.addEventListener('submit', (event) => {
+				event.preventDefault();
+				alert('Profile details saved successfully.');
+			});
+
+			avatarUploadBtn?.addEventListener('click', () => {
+				avatarFileInput?.click();
+			});
+
+			avatarFileInput?.addEventListener('change', async (event) => {
+				const file = event.target.files[0];
+				if (!file) return;
+				displayStatus(avatarUploadStatus, '', null);
+				if (!file.type.startsWith('image/')) {
+					displayStatus(avatarUploadStatus, 'Please choose a valid image file.', 'error');
+					event.target.value = '';
+					return;
+				}
+				if (file.size > maxAvatarBytes) {
+					displayStatus(avatarUploadStatus, 'File is larger than 3 MB.', 'error');
+					event.target.value = '';
+					return;
+				}
+
+				displayStatus(avatarUploadStatus, 'Uploading photo...', null);
+
+				const formData = new FormData();
+				formData.append('avatar', file);
+
+				try {
+					const response = await fetch('/api/profile/photo', {
+						method: 'POST',
+						headers: { 'Authorization': `Bearer ${authToken}` },
+						body: formData
+					});
+					const result = await response.json().catch(() => ({}));
+					if (response.status === 401) {
+						window.location.href = 'login.html';
+						return;
+					}
+					if (!response.ok) {
+						throw new Error(result.error || 'Upload failed.');
+					}
+
+					const photoUrl = result.photo_url;
+					if (photoUrl && avatarEl) {
+						storedPhoto = photoUrl;
+						const cacheBusted = bustCache(photoUrl);
+						avatarEl.classList.add('account-profile-avatar-has-image');
+						if (avatarImageEl) {
+							avatarImageEl.src = cacheBusted;
+							avatarImageEl.alt = `Profile photo of ${activeName}`;
+						}
+						if (avatarInitialsEl) {
+							avatarInitialsEl.textContent = '';
+						}
+						updateNavAvatars(cacheBusted, initials);
+						localStorage.setItem('ref_photo_url', photoUrl);
+					}
+					displayStatus(avatarUploadStatus, 'Profile photo updated.', 'success');
+				} catch (error) {
+					displayStatus(avatarUploadStatus, error.message || 'Upload failed.', 'error');
+				} finally {
+					event.target.value = '';
+				}
+			});
+
+			updatePasswordBtn?.addEventListener('click', () => {
+				document.getElementById('currentPassword')?.focus();
+			});
+
+			passwordForm?.addEventListener('submit', async (event) => {
+				event.preventDefault();
+				if (!passwordStatusEl) return;
+
+				const currentPassword = document.getElementById('currentPassword')?.value.trim() || '';
+				const newPassword = document.getElementById('newPassword')?.value.trim() || '';
+				const confirmPassword = document.getElementById('confirmPassword')?.value.trim() || '';
+
+				if (newPassword.length < 8) {
+					displayStatus(passwordStatusEl, 'New password must be at least 8 characters.', 'error');
+					return;
+				}
+
+				if (newPassword !== confirmPassword) {
+					displayStatus(passwordStatusEl, 'New passwords do not match.', 'error');
+					return;
+				}
+
+				displayStatus(passwordStatusEl, 'Updating password...', null);
+
+				try {
+					const response = await fetch('/api/profile/password', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': `Bearer ${authToken}`
+						},
+						body: JSON.stringify({ currentPassword, newPassword })
+					});
+					const result = await response.json().catch(() => ({}));
+					if (response.status === 401) {
+						window.location.href = 'login.html';
+						return;
+					}
+					if (!response.ok) {
+						throw new Error(result.error || 'Unable to update password.');
+					}
+
+					displayStatus(passwordStatusEl, 'Password updated successfully.', 'success');
+					passwordForm.reset();
+				} catch (error) {
+					displayStatus(passwordStatusEl, error.message || 'Unable to update password.', 'error');
+				}
+			});
+		});
+	</script>
+</body>
+</html>
