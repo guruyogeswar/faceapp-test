@@ -1701,10 +1701,10 @@ footer { background: linear-gradient(135deg, var(--primary-color), var(--primary
     padding: 4rem 0 6rem;
 }
 .account-layout {
-    display: grid;
-    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 2.5rem;
-    align-items: start;
+    align-items: flex-start;
 }
 .account-card {
     background: var(--white-color);
@@ -1716,6 +1716,13 @@ footer { background: linear-gradient(135deg, var(--primary-color), var(--primary
     display: grid;
     gap: 1.5rem;
     align-content: start;
+    flex: 1 1 320px;
+    min-width: 260px;
+    max-width: 360px;
+}
+.account-main {
+    flex: 1 1 520px;
+    min-width: 0;
 }
 .account-profile-card {
     position: relative;
@@ -1724,6 +1731,14 @@ footer { background: linear-gradient(135deg, var(--primary-color), var(--primary
     flex-direction: column;
     gap: 1.5rem;
     text-align: center;
+}
+.account-profile-card h2 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    margin: 0 auto;
 }
 .account-profile-avatar {
     width: 92px;
@@ -1758,6 +1773,8 @@ footer { background: linear-gradient(135deg, var(--primary-color), var(--primary
 .account-user-email {
     color: var(--gray-500);
     font-size: 0.95rem;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 .account-upload-hint {
     font-size: 0.85rem;
@@ -2101,7 +2118,12 @@ footer { background: linear-gradient(135deg, var(--primary-color), var(--primary
         order: -1;
     }
     .account-layout {
-        grid-template-columns: minmax(0, 1fr);
+        flex-direction: column;
+    }
+    .account-sidebar,
+    .account-main {
+        flex: 1 1 100%;
+        min-width: 0;
     }
     .account-profile-card {
         position: static;
