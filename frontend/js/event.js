@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Lightbox Functions ---
     const openLightbox = (photoIndex) => {
         if (!currentlyDisplayedPhotos.length) return;
-        
+
         currentLightboxIndex = photoIndex;
         updateLightboxContent();
         lightboxModal.classList.remove('hidden');
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
             photosContainer.innerHTML = `<p class="text-center text-gray-500 py-10">No photos were found in this album.</p>`;
             return;
         }
-        
+
         photosContainer.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
 
         photos.forEach((photo, index) => {
@@ -206,18 +206,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-            
+
             // Add click handler for lightbox (but not on download button)
             photoCard.addEventListener('click', (e) => {
                 if (!e.target.closest('.photo-download-btn')) {
                     openLightbox(index);
                 }
             });
-            
+
             photosContainer.appendChild(photoCard);
         });
     };
-    
+
     // --- API Calls ---
     const fetchPhotos = async (url, token = null) => {
         photosContainer.innerHTML = `<div class="col-span-full text-center py-10"><div class="spinner"></div></div>`;
@@ -354,6 +354,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // --- Swipe Functionality ---
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    lightboxModal.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    lightboxModal.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+    const handleSwipe = () => {
+        if (touchEndX < touchStartX - 50) {
+            // Swipe Left -> Next
+            navigateLightbox(1);
+        }
+        if (touchEndX > touchStartX + 50) {
+            // Swipe Right -> Prev
+            navigateLightbox(-1);
+        }
+    };
 
     // --- Start the application ---
     init();

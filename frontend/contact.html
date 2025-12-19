@@ -1,99 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contact Us - Aadishree</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  />
-</head>
-<body>
-  <header class="header-main">
-    <div class="container header-container">
-        <nav class="header-nav">
-            <div class="header-logo">
-                <a href="index.html">
-                        <img src="frontend/uploads/aadishree-03.png" alt="Aadishree logo" />
-                </a>
-            </div>
-            <div class="nav-links-desktop" id="navLinks">
-                <a href="index.html" class="nav-link-item">Home</a>
-                <a href="features.html" class="nav-link-item">Features</a>
-                <a href="albums.html" class="nav-link-item">Albums</a>
-                <!-- <a href="pricing.html" class="nav-link-item">Pricing</a> -->
-                <a href="contact.html" class="nav-link-item active">Contact Us</a>
-            </div>
-            <div class="auth-links-desktop">
-                <a href="getaquote.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Ask for Quote</a>
-                <!-- <a href="signin.html" id="signinBtnNav" class="btn btn-primary btn-sm">Sign Up</a> -->
-                <div id="profileDropdownContainer" class="profile-dropdown" style="display: none;">
-                    <button id="profileDropdownButton" class="profile-dropdown-button" aria-expanded="false" aria-haspopup="true">
-                        <span id="profileInitials" class="profile-initials-text">JD</span>
-                    </button>
-                    <div id="profileDropdownMenu" class="profile-dropdown-menu hidden">
-                        <div class="profile-dropdown-header">
-                            <div class="profile-user-info">
-                                <div class="profile-initials-avatar">
-                                    <span id="dropdownProfileInitials">JD</span>
-                                </div>
-                                <div>
-                                    <p id="dropdownUserName" class="profile-user-name">John Doe</p>
-                                    <p id="dropdownUserEmail" class="profile-user-email">john.doe@example.com</p>
-                                </div>
-                            </div>
-                            <a href="manage_account.html" id="manageAccountLink" class="profile-manage-link">Manage your Account</a>
-                        </div>
-                        <div class="profile-dropdown-footer">
-                            <a href="#" id="logoutBtnDropdown" class="profile-dropdown-item logout-link">
-                                <i class="fas fa-sign-out-alt icon-prefix"></i>Sign out
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="hamburger-menu-container">
-                <button id="hamburger" aria-label="Open menu" aria-expanded="false" class="hamburger-button">
-                    <i class="fas fa-bars icon-menu-open"></i>
-                    <i class="fas fa-times icon-menu-close" style="display:none;"></i>
-                </button>
-            </div>
-        </nav>
-    </div>
-    <div class="mobile-nav-menu hidden" id="mobileNavLinksMenu">
-        <a href="index.html" class="nav-link-item-mobile">Home</a>
-        <a href="features.html" class="nav-link-item-mobile">Features</a>
-        <a href="albums.html" class="nav-link-item-mobile">Albums</a>
-        <!-- <a href="pricing.html" class="nav-link-item-mobile">Pricing</a> -->
-        <a href="contact.html" class="nav-link-item-mobile active">Contact Us</a>
-        <div class="mobile-auth-section">
-            <a href="getaquote.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Ask for Quote</a>
 
-            <!-- <a href="login.html" id="loginBtnNavMobile" class="btn btn-secondary btn-sm btn-full-width btn-margin-bottom">Log In</a> -->
-            <!-- <a href="signin.html" id="signinBtnNavMobile" class="btn btn-primary btn-sm btn-full-width btn-margin-bottom">Sign Up</a> -->
-            <div id="profileContainerMobile" style="display:none;">
-                <div class="profile-user-info-mobile">
-                    <div class="profile-initials-avatar-sm">
-                       <span id="profileInitialsMobile">JD</span>
-                    </div>
-                    <div>
-                       <p id="userNameMobile" class="profile-user-name-sm">John Doe</p>
-                       <p id="userEmailMobile" class="profile-user-email-sm">john.doe@example.com</p>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json">
+    <title>Contact Us - Aadishree</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+</head>
+
+<body>
+    <header class="header-main">
+        <div class="container header-container">
+            <nav class="header-nav">
+                <div class="header-logo">
+                    <a href="index.html">
+                        <img src="frontend/uploads/aadishree-03.png" alt="Aadishree logo" />
+                    </a>
+                </div>
+                <div class="nav-links-desktop" id="navLinks">
+                    <a href="index.html" class="nav-link-item">Home</a>
+                    <a href="features.html" class="nav-link-item">Features</a>
+                    <a href="albums.html" class="nav-link-item">Albums</a>
+                    <!-- <a href="pricing.html" class="nav-link-item">Pricing</a> -->
+                    <a href="contact.html" class="nav-link-item active">Contact Us</a>
+                </div>
+                <div class="auth-links-desktop">
+                    <a href="getaquote.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Ask for Quote</a>
+                    <!-- <a href="signin.html" id="signinBtnNav" class="btn btn-primary btn-sm">Sign Up</a> -->
+                    <div id="profileDropdownContainer" class="profile-dropdown" style="display: none;">
+                        <button id="profileDropdownButton" class="profile-dropdown-button" aria-expanded="false"
+                            aria-haspopup="true">
+                            <span id="profileInitials" class="profile-initials-text">JD</span>
+                        </button>
+                        <div id="profileDropdownMenu" class="profile-dropdown-menu hidden">
+                            <div class="profile-dropdown-header">
+                                <div class="profile-user-info">
+                                    <div class="profile-initials-avatar">
+                                        <span id="dropdownProfileInitials">JD</span>
+                                    </div>
+                                    <div>
+                                        <p id="dropdownUserName" class="profile-user-name">John Doe</p>
+                                        <p id="dropdownUserEmail" class="profile-user-email">john.doe@example.com</p>
+                                    </div>
+                                </div>
+                                <a href="manage_account.html" id="manageAccountLink" class="profile-manage-link">Manage
+                                    your Account</a>
+                            </div>
+                            <div class="profile-dropdown-footer">
+                                <a href="#" id="logoutBtnDropdown" class="profile-dropdown-item logout-link">
+                                    <i class="fas fa-sign-out-alt icon-prefix"></i>Sign out
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <a href="#" id="logoutBtnNavMobile" class="btn btn-danger-outline btn-sm btn-full-width">
-                    <i class="fas fa-sign-out-alt icon-prefix"></i>Sign Out
-                </a>
+                <div class="hamburger-menu-container">
+                    <button id="hamburger" aria-label="Open menu" aria-expanded="false" class="hamburger-button">
+                        <i class="fas fa-bars icon-menu-open"></i>
+                        <i class="fas fa-times icon-menu-close" style="display:none;"></i>
+                    </button>
+                </div>
+            </nav>
+        </div>
+        <div class="mobile-nav-menu hidden" id="mobileNavLinksMenu">
+            <a href="index.html" class="nav-link-item-mobile">Home</a>
+            <a href="features.html" class="nav-link-item-mobile">Features</a>
+            <a href="albums.html" class="nav-link-item-mobile">Albums</a>
+            <!-- <a href="pricing.html" class="nav-link-item-mobile">Pricing</a> -->
+            <a href="contact.html" class="nav-link-item-mobile active">Contact Us</a>
+            <div class="mobile-auth-section">
+                <a href="getaquote.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Ask for Quote</a>
+
+                <!-- <a href="login.html" id="loginBtnNavMobile" class="btn btn-secondary btn-sm btn-full-width btn-margin-bottom">Log In</a> -->
+                <!-- <a href="signin.html" id="signinBtnNavMobile" class="btn btn-primary btn-sm btn-full-width btn-margin-bottom">Sign Up</a> -->
+                <div id="profileContainerMobile" style="display:none;">
+                    <div class="profile-user-info-mobile">
+                        <div class="profile-initials-avatar-sm">
+                            <span id="profileInitialsMobile">JD</span>
+                        </div>
+                        <div>
+                            <p id="userNameMobile" class="profile-user-name-sm">John Doe</p>
+                            <p id="userEmailMobile" class="profile-user-email-sm">john.doe@example.com</p>
+                        </div>
+                    </div>
+                    <a href="#" id="logoutBtnNavMobile" class="btn btn-danger-outline btn-sm btn-full-width">
+                        <i class="fas fa-sign-out-alt icon-prefix"></i>Sign Out
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
-</header>
+    </header>
 
     <main>
         <!-- <section class="contact-hero">
@@ -139,14 +139,14 @@
                             <div class="icon-wrap"><i class="fas fa-comments"></i></div>
                             <div>
                                 <h2>Talk to a specialist</h2>
-                                <p class="contact-lede">Tell us what you're building and we'll map the right solution.</p>
+                                <p class="contact-lede">Tell us what you need and we'll map the right solution.</p>
                             </div>
                         </div>
                         <div class="contact-channel">
                             <div class="channel-icon"><i class="fas fa-envelope-open-text"></i></div>
                             <div>
                                 <h3>General enquiries</h3>
-                                <a href="mailto:hello@aadishree.com">hello@aadishree.com</a>
+                                <a href="mailto:aadhishreephotofilm@gmail.com">aadhishreephotofilm@gmail.com</a>
                                 <p>Expect a detailed reply within 24 hours.</p>
                             </div>
                         </div>
@@ -154,8 +154,8 @@
                             <div class="channel-icon"><i class="fas fa-phone"></i></div>
                             <div>
                                 <h3>Call us</h3>
-                                    <a href="tel:+15551234567">+1 (555) 123-4567</a>
-                                    <p>Monday - Friday &middot; 9:00 AM - 5:00 PM PST</p>
+                                <a href="tel:+15551234567">+1 (555) 123-4567</a>
+                                <p>Monday - Friday &middot; 9:00 AM - 5:00 PM PST</p>
                             </div>
                         </div>
                         <div class="contact-channel">
@@ -167,16 +167,21 @@
                         </div>
                         <ul class="contact-highlights">
                             <li><i class="fas fa-circle-check"></i>Personal onboarding with portfolio migration</li>
-                            <li><i class="fas fa-circle-check"></i>Flexible deployment on AWS, Azure, or private cloud</li>
+                            <li><i class="fas fa-circle-check"></i>Flexible deployment on AWS, Azure, or private cloud
+                            </li>
                             <li><i class="fas fa-circle-check"></i>Enterprise SLAs and custom security reviews</li>
                         </ul>
                         <div class="contact-social">
                             <p>Join our community:</p>
                             <div class="social-icons">
-                                <a href="#" class="social-icon" aria-label="Follow on Facebook"><i class="fab fa-facebook-f"></i></a>
-                                <a href="#" class="social-icon" aria-label="Follow on Twitter"><i class="fab fa-twitter"></i></a>
-                                <a href="#" class="social-icon" aria-label="Follow on Instagram"><i class="fab fa-instagram"></i></a>
-                                <a href="#" class="social-icon" aria-label="Follow on LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                                <a href="#" class="social-icon" aria-label="Follow on Facebook"><i
+                                        class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="social-icon" aria-label="Follow on Twitter"><i
+                                        class="fab fa-twitter"></i></a>
+                                <a href="#" class="social-icon" aria-label="Follow on Instagram"><i
+                                        class="fab fa-instagram"></i></a>
+                                <a href="#" class="social-icon" aria-label="Follow on LinkedIn"><i
+                                        class="fab fa-linkedin-in"></i></a>
                             </div>
                         </div>
                     </div>
@@ -221,7 +226,9 @@
                             </div>
                             <div class="form-field full-width">
                                 <label for="message">Project details</label>
-                                <textarea id="message" name="message" placeholder="Share timelines, event size, integrations, or any questions" required></textarea>
+                                <textarea id="message" name="message"
+                                    placeholder="Share timelines, event size, integrations, or any questions"
+                                    required></textarea>
                             </div>
                         </div>
                         <div class="form-actions">
@@ -260,9 +267,10 @@
         <section class="contact-cta">
             <div class="container contact-cta-inner">
                 <h2>Ready to delight every guest with personalized galleries?</h2>
-                        <p>
-                            We'll bring a curated recommendation set, implementation roadmap, and ROI forecast to your first conversation.
-                        </p>
+                <p>
+                    We'll bring a curated recommendation set, implementation roadmap, and ROI forecast to your first
+                    conversation.
+                </p>
                 <div class="cta-actions">
                     <a href="getaquote.html" class="btn btn-primary">Book a consultation</a>
                     <a href="features.html" class="btn btn-outline btn-light">Explore the platform</a>
@@ -297,10 +305,11 @@
             </div>
         </div>
     </footer>
-     <script>
-                document.getElementById('currentYear').textContent = new Date().getFullYear();
-        </script>
-  <script src="js/script.js"></script>
-  <script src="js/gloabal_auth.js"></script>
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+    <script src="js/script.js"></script>
+    <script src="js/gloabal_auth.js"></script>
 </body>
+
 </html>
