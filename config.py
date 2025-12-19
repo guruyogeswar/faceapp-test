@@ -15,7 +15,7 @@ R2_CONFIG = {
 JWT_SECRET = "pixelperfect-secure-albums-secret-key-2023"
 
 # ML API Base URL
-ML_API_BASE_URL = "https://facerecognitionphotography-app-200111791636.asia-south1.run.app/" 
+ML_API_BASE_URL = "http://localhost:8080/" 
 
 # Google OAuth Configuration (Replace with your actual credentials)
 GOOGLE_CLIENT_ID     = '200111791636-5ulrqjctdclgd58e5csi745svcaitt8m.apps.googleusercontent.com'

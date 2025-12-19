@@ -117,6 +117,32 @@ def add_album(photographer_username: str, album_slug: str, album_name: str) -> T
         session.close()
 
 
+def delete_album(photographer_username: str, album_slug: str) -> Tuple[bool, str]:
+    """Delete an album from the database."""
+    session = db_config.get_session()
+    try:
+        photographer = session.query(User).filter_by(username=photographer_username).first()
+        if not photographer:
+            return False, "Photographer not found."
+
+        album = (
+            session.query(Album)
+            .filter_by(photographer_id=photographer.id, album_id=album_slug)
+            .first()
+        )
+        if not album:
+            return False, "Album not found."
+
+        session.delete(album)
+        session.commit()
+        return True, "Album deleted successfully."
+    except Exception as e:
+        session.rollback()
+        return False, str(e)
+    finally:
+        session.close()
+
+
 def grant_album_access(
     attendee_username: str, photographer_username: str, album_slug: str
 ) -> Tuple[bool, str]:

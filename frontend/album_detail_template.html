@@ -15,9 +15,25 @@
         </ol>
     </nav>
     <div class="flex flex-col sm:flex-row justify-between items-center">
-        <h1 id="detail-album-title" class="text-3xl font-semibold text-dark-color mb-3 sm:mb-0"><!-- Album Name Here --></h1>
-        <div class="flex space-x-2">
-             <button id="uploadToAlbumBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 text-sm flex items-center space-x-2">
+        <h1 id="detail-album-title" class="text-3xl font-semibold text-dark-color mb-3 sm:mb-0"><!-- Album Name Here -->
+        </h1>
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Delete Mode Toggle (Photos) -->
+            <button id="togglePhotoDeleteModeBtn"
+                class="text-primary border border-primary px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-600 transition-colors flex items-center space-x-2 text-sm">
+                <i class="fas fa-check-circle"></i>
+                <span id="photoDeleteModeBtnText">Select</span>
+            </button>
+
+            <!-- Delete Action Button (Hidden by default) -->
+            <button id="deleteSelectedPhotosBtn" style="display: none;"
+                class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2 text-sm">
+                <i class="fas fa-trash-alt"></i>
+                <span>Delete (<span id="selectedPhotoCount">0</span>)</span>
+            </button>
+
+            <button id="uploadToAlbumBtn"
+                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 text-sm flex items-center space-x-2">
                 <i class="fas fa-upload"></i>
                 <span>Upload Photos</span>
             </button>
@@ -28,24 +44,12 @@
 </div>
 
 <!-- Action Bar (appears when photos are selected) -->
-<div id="photo-action-bar" class="hidden sticky top-16 bg-white/80 backdrop-blur-md shadow-md rounded-lg p-3 mb-6 z-40 flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
-    <span id="selection-count" class="text-sm font-medium text-gray-700">0 photos selected</span>
-    <div class="flex space-x-2">
-        <button id="downloadSelectedBtn" class="text-sm px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center space-x-1.5">
-            <i class="fas fa-download"></i><span>Download</span>
-        </button>
-        <button id="deleteSelectedBtn" class="text-sm px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center space-x-1.5">
-            <i class="fas fa-trash"></i><span>Delete</span>
-        </button>
-        <button id="clearSelectionBtn" class="text-sm px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 flex items-center space-x-1.5">
-            <i class="fas fa-times-circle"></i><span>Clear</span>
-        </button>
-    </div>
-</div>
+
 
 
 <!-- Photo Grid Loading Skeleton -->
-<div id="photo-grid-loader" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4" style="display: none;">
+<div id="photo-grid-loader" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+    style="display: none;">
     <!-- Skeleton Item Repeater -->
     <div class="aspect-square bg-gray-300 rounded-lg animate-pulse"></div>
     <div class="aspect-square bg-gray-300 rounded-lg animate-pulse"></div>
@@ -74,14 +78,20 @@
 </p>
 
 <!-- Lightbox Modal for viewing single photo -->
-<div id="lightbox-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[100]" style="display: none;">
+<div id="lightbox-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[100]"
+    style="display: none;">
     <div class="bg-white p-4 rounded-lg shadow-2xl max-w-4xl max-h-[90vh] w-auto relative flex flex-col">
-        <button id="close-lightbox" class="absolute -top-3 -right-3 text-white bg-red-500 rounded-full h-8 w-8 flex items-center justify-center hover:bg-red-600 z-10 focus:outline-none leading-none text-2xl pt-px">&times;</button>
-        <img id="lightbox-image" src="" alt="Lightbox image" class="max-w-full max-h-[75vh] object-contain mx-auto mb-3">
-        <div id="lightbox-caption" class="text-center text-sm text-gray-700 mt-1"><!-- Photo name/caption --></div>
-        <div class="flex justify-between items-center mt-auto pt-3">
-            <button id="lightbox-prev" class="text-primary hover:text-primary-dark text-2xl p-2 disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-chevron-left"></i></button>
-            <button id="lightbox-next" class="text-primary hover:text-primary-dark text-2xl p-2 disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-chevron-right"></i></button>
+        <button id="close-lightbox"
+            class="absolute -top-3 -right-3 text-white bg-red-500 rounded-full h-8 w-8 flex items-center justify-center hover:bg-red-600 z-10 focus:outline-none leading-none text-2xl pt-px">&times;</button>
+        <img id="lightbox-image" src="" alt="Lightbox image"
+            class="max-w-full max-h-[75vh] object-contain mx-auto mb-3">
+        <div class="flex justify-center items-center mt-auto pt-3 space-x-12">
+            <button id="lightbox-prev"
+                class="text-primary hover:text-primary-dark text-4xl p-2 disabled:opacity-50 disabled:cursor-not-allowed transition-transform hover:scale-110 active:scale-95"><i
+                    class="fas fa-chevron-left"></i></button>
+            <button id="lightbox-next"
+                class="text-primary hover:text-primary-dark text-4xl p-2 disabled:opacity-50 disabled:cursor-not-allowed transition-transform hover:scale-110 active:scale-95"><i
+                    class="fas fa-chevron-right"></i></button>
         </div>
     </div>
 </div>

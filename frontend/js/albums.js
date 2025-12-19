@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let isAttendee = false;
 
     const API_BASE_URL = '';
-    const ML_API_BASE_URL = 'https://facerecognitionphotography-app-200111791636.asia-south1.run.app/';
+    const ML_API_BASE_URL = 'http://localhost:8080/';
 
     function showToast(message, type = 'info') {
         if (!DOMElements.toastContainer) return;
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             toast.remove();
         });
     }
-    
+
     async function checkLoginStatusForAlbums() {
         const token = localStorage.getItem('authToken');
         if (!token) {
@@ -65,10 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (!response.ok) throw new Error('Session expired');
             const data = await response.json();
-            
+
             currentUser = { username: data.username, role: data.role };
             isAttendee = data.role === 'attendee';
-            
+
             if (DOMElements.loginPromptDiv) DOMElements.loginPromptDiv.style.display = 'none';
             if (DOMElements.albumsMainContentDiv) DOMElements.albumsMainContentDiv.style.display = 'block';
             return true;
@@ -116,16 +116,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function fetchAlbums() {
         const token = localStorage.getItem('authToken');
         if (DOMElements.albumGridLoader) DOMElements.albumGridLoader.style.display = 'grid';
-        
+
         const endpoint = '/api/albums';
-        
+
         try {
             const response = await fetch(endpoint, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Failed to fetch albums');
             const albums = await response.json();
-            displayAlbums(albums);
+            renderAlbumGrid(albums);
         } catch (error) {
             showToast(error.message, 'error');
         } finally {
@@ -133,12 +133,153 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function displayAlbums(albums) {
+    // --- Delete Mode Logic ---
+    let isDeleteMode = false;
+    let selectedAlbums = new Set();
+
+    // Elements for Delete Mode
+    const toggleDeleteModeBtn = document.getElementById('toggleDeleteModeBtn');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const deleteModeBtnText = document.getElementById('deleteModeBtnText');
+    const selectedCountSpan = document.getElementById('selectedCount');
+
+    // Toggle Button Listener
+    if (toggleDeleteModeBtn) {
+        toggleDeleteModeBtn.addEventListener('click', () => {
+            isDeleteMode = !isDeleteMode;
+            if (isDeleteMode) {
+                toggleDeleteModeBtn.classList.replace('bg-gray-100', 'bg-red-100');
+                toggleDeleteModeBtn.classList.replace('text-gray-700', 'text-red-700');
+                toggleDeleteModeBtn.classList.replace('border-gray-300', 'border-red-300');
+                if (deleteModeBtnText) deleteModeBtnText.textContent = "Exit Delete Mode";
+                if (DOMElements.createAlbumBtn) DOMElements.createAlbumBtn.style.display = 'none';
+                if (deleteSelectedBtn) deleteSelectedBtn.style.display = 'flex';
+            } else {
+                toggleDeleteModeBtn.classList.replace('bg-red-100', 'bg-gray-100');
+                toggleDeleteModeBtn.classList.replace('text-red-700', 'text-gray-700');
+                toggleDeleteModeBtn.classList.replace('border-red-300', 'border-gray-300');
+                if (deleteModeBtnText) deleteModeBtnText.textContent = "Select to Delete";
+                if (DOMElements.createAlbumBtn) DOMElements.createAlbumBtn.style.display = 'flex';
+                if (deleteSelectedBtn) deleteSelectedBtn.style.display = 'none';
+
+                // Clear selections
+                selectedAlbums.clear();
+                updateAlbumSelectionVisuals();
+            }
+        });
+    }
+
+    // Generic Confirmation Modal Logic
+    function showConfirmationModal(title, message, onConfirm) {
+        const modal = document.getElementById('confirmation-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const confirmBtn = document.getElementById('modal-confirm-btn');
+        const cancelBtn = document.getElementById('modal-cancel-btn');
+
+        if (!modal || !confirmBtn || !cancelBtn) {
+            // Fallback
+            if (confirm(message)) onConfirm();
+            return;
+        }
+
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modal.style.display = 'flex';
+
+        const closeModal = () => {
+            modal.style.display = 'none';
+            cleanup();
+        };
+
+        const handleConfirm = async () => {
+            closeModal();
+            await onConfirm();
+        };
+
+        const cleanup = () => {
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', closeModal);
+            modal.removeEventListener('click', handleOutsideClick);
+        };
+
+        const handleOutsideClick = (e) => {
+            if (e.target === modal) closeModal();
+        };
+
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', handleOutsideClick);
+    }
+
+    // Delete Button Listener
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', () => {
+            const count = selectedAlbums.size;
+            if (count === 0) return;
+
+            showConfirmationModal(
+                "Delete Albums",
+                `Are you sure you want to permanently delete ${count} album(s)? This cannot be undone.`,
+                () => deleteSelectedAlbums()
+            );
+        });
+    }
+
+    async function deleteSelectedAlbums() {
+        showToast("Deleting albums...", "info");
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('/api/albums/batch', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ album_ids: Array.from(selectedAlbums) })
+            });
+
+            if (response.ok) {
+                showToast("Albums deleted successfully", "success");
+                selectedAlbums.clear();
+                updateAlbumSelectionVisuals();
+                // Refresh list
+                await fetchAlbums();
+            } else {
+                const data = await response.json();
+                showToast(data.error || "Failed to delete albums", "error");
+            }
+        } catch (e) {
+            console.error(e);
+            showToast("Error deleting albums", "error");
+        }
+    }
+
+    function updateAlbumSelectionVisuals() {
+        if (selectedCountSpan) selectedCountSpan.textContent = selectedAlbums.size;
+
+        // Update album cards
+        const cards = DOMElements.albumGrid.querySelectorAll('.album-card-item');
+        cards.forEach(card => {
+            const id = card.dataset.albumId;
+            const checkmark = card.querySelector('.selection-checkmark');
+
+            if (selectedAlbums.has(id)) {
+                card.classList.add('ring-4', 'ring-red-500', 'scale-95');
+                if (checkmark) checkmark.style.display = 'flex';
+            } else {
+                card.classList.remove('ring-4', 'ring-red-500', 'scale-95');
+                if (checkmark) checkmark.style.display = 'none';
+            }
+        });
+    }
+
+    function renderAlbumGrid(albums) {
         if (!DOMElements.albumGrid || !DOMElements.noAlbumsMessage) return;
 
         DOMElements.albumGrid.innerHTML = '';
         const hasAlbums = albums && albums.length > 0;
-        
+
         let emptyMessage = isAttendee
             ? "No albums have been shared with you yet. When a photographer grants you access, their albums will appear here."
             : "You don't have any albums yet. Click 'Create New Album' to get started!";
@@ -151,13 +292,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         albums.forEach(album => {
             const card = document.createElement('div');
-            card.className = 'album-card-item bg-white rounded-xl shadow-lg overflow-hidden group';
+            card.className = 'album-card-item bg-white rounded-xl shadow-lg overflow-hidden group transition-all duration-200';
+            card.dataset.albumId = album.id;
             const coverUrl = album.cover || `https://placehold.co/400x300/e0e0e0/777?text=${encodeURIComponent(album.name)}`;
-            
+
             const photographerLabel = album.photographer || 'Photographer';
             const photographerInfo = isAttendee ? `<p class="text-xs text-gray-500 mt-1">by ${photographerLabel}</p>` : '';
             const shareButtonHTML = !isAttendee ? `
-                <div class="absolute top-2 right-2">
+                <div class="absolute top-2 right-2 z-10">
                     <button class="share-album-btn bg-black bg-opacity-40 text-white rounded-full h-9 w-9 flex items-center justify-center hover:bg-opacity-60 transition-opacity" data-album-id="${album.id}" title="Share Album">
                         <i class="fas fa-share-alt"></i>
                     </button>
@@ -165,8 +307,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             card.innerHTML = `
                 <div class="relative">
-                    <div class="w-full h-48 bg-gray-200 overflow-hidden cursor-pointer img-container">
+                    <div class="w-full h-48 bg-gray-200 overflow-hidden cursor-pointer img-container relative">
                         <img src="${coverUrl}" alt="${album.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                        
+                        <!-- Selection Overlay (Checkmark) -->
+                        <div class="selection-checkmark absolute top-2 left-2 w-8 h-8 bg-white rounded-full items-center justify-center shadow-md z-20" style="display: none;">
+                            <i class="fas fa-check text-red-600 font-bold"></i>
+                        </div>
                     </div>
                     ${shareButtonHTML}
                 </div>
@@ -175,19 +322,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <p class="text-xs text-gray-500">${album.photo_count || 0} photos</p>
                     ${photographerInfo}
                 </div>`;
-            
+
             const viewTarget = `/event.html?photographer=${album.photographer}&album=${album.id}&type=vip`;
 
-            if (isAttendee) {
-                card.querySelector('.img-container').addEventListener('click', () => window.location.href = viewTarget);
-                card.querySelector('.info-container').addEventListener('click', () => window.location.href = viewTarget);
-            } else {
-                card.querySelector('.img-container').addEventListener('click', () => loadAlbumDetailView(album.id, album.name));
-                card.querySelector('.info-container').addEventListener('click', () => loadAlbumDetailView(album.id, album.name));
-            }
+            const handleCardClick = (e) => {
+                // Prevent navigation if clicking share button
+                if (e.target.closest('.share-album-btn')) return;
+
+                if (isDeleteMode && !isAttendee) {
+                    if (selectedAlbums.has(album.id)) {
+                        selectedAlbums.delete(album.id);
+                    } else {
+                        selectedAlbums.add(album.id);
+                    }
+                    updateAlbumSelectionVisuals();
+                } else {
+                    // Navigate only if NOT in delete mode
+                    if (isAttendee) {
+                        window.location.href = viewTarget;
+                    } else {
+                        loadAlbumDetailView(album.id, album.name);
+                    }
+                }
+            };
+
+            card.querySelector('.img-container').addEventListener('click', handleCardClick);
+            card.querySelector('.info-container').addEventListener('click', handleCardClick);
 
             DOMElements.albumGrid.appendChild(card);
         });
+
+        if (isDeleteMode) updateAlbumSelectionVisuals();
     }
 
     function setAccessLevel(type) {
@@ -213,26 +378,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Fetch the album detail template
             const templateResponse = await fetch('album_detail_template.html');
             const templateHTML = await templateResponse.text();
-            
+
             // Inject the template into the detail view container
             DOMElements.albumDetailView.innerHTML = templateHTML;
-            
+
             // Update DOM element references for the detail view
             updateDetailViewDOMElements();
-            
+
             // Set album name in the template
             document.getElementById('breadcrumb-album-name').textContent = albumName;
             document.getElementById('detail-album-title').textContent = albumName;
-            
+
             // Switch to the detail view
             switchView('album-detail-view');
-            
+
             // Load photos for this album
             await loadAlbumPhotos(albumId);
-            
+
             // Setup event listeners for the detail view
             setupDetailViewEventListeners(albumId);
-            
+
         } catch (error) {
             console.error('Error loading album detail view:', error);
             showToast('Failed to load album details', 'error');
@@ -248,24 +413,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadAlbumPhotos(albumId) {
         if (!DOMElements.photoGrid || !DOMElements.photoGridLoader) return;
-        
+
         try {
             // Show loading state
             DOMElements.photoGridLoader.style.display = 'grid';
             DOMElements.photoGrid.style.display = 'none';
-            
+
             // Fetch photos from the API
             const token = localStorage.getItem('authToken');
             const response = await fetch(`/api/albums/${albumId}/photos`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            
+
             if (!response.ok) throw new Error('Failed to fetch photos');
             const photos = await response.json();
-            
+
             // Display photos
             displayAlbumPhotos(photos);
-            
+
         } catch (error) {
             console.error('Error loading album photos:', error);
             showToast('Failed to load photos', 'error');
@@ -277,37 +442,61 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function displayAlbumPhotos(photos) {
         if (!DOMElements.photoGrid || !DOMElements.noPhotosMessage) return;
-        
+
         DOMElements.photoGrid.innerHTML = '';
         const hasPhotos = photos && photos.length > 0;
-        
+
         DOMElements.noPhotosMessage.style.display = hasPhotos ? 'none' : 'block';
         DOMElements.photoGrid.style.display = hasPhotos ? 'grid' : 'none';
-        
+
         if (!hasPhotos) return;
-        
+
         photos.forEach(photo => {
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item group relative aspect-square rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-300';
+            photoItem.dataset.photoId = photo.id || photo.name;
+
             photoItem.innerHTML = `
                 <img src="${photo.url}" alt="${photo.name}" class="w-full h-full object-cover" loading="lazy">
                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300"></div>
-                <input type="checkbox" class="absolute top-2 right-2 h-5 w-5 rounded text-primary focus:ring-primary-dark opacity-0 group-hover:opacity-100 photo-checkbox transition-opacity duration-300" data-photo-id="${photo.id}">
+                
+                <!-- Selection Overlay (Checkmark) -->
+                <div class="selection-checkmark absolute top-2 right-2 w-6 h-6 bg-white rounded-full items-center justify-center shadow-md z-20" style="display: none;">
+                     <i class="fas fa-check text-red-600 font-bold text-xs"></i>
+                </div>
+                
                 <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/50 to-transparent">
                     <p class="text-white text-xs truncate">${photo.name}</p>
                 </div>
             `;
-            
-            // Add click handler for lightbox
+
+            // Add click handler 
             photoItem.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('photo-checkbox')) {
+                // If in Delete Mode, handle selection
+                if (isPhotoDeleteMode) {
+                    const id = photo.id || photo.name;
+                    if (selectedPhotos.has(id)) {
+                        selectedPhotos.delete(id);
+                    } else {
+                        selectedPhotos.add(id);
+                    }
+                    updatePhotoSelectionVisuals();
+                } else {
+                    // Normal Lightbox
                     openLightbox(photo, photos);
                 }
             });
-            
+
             DOMElements.photoGrid.appendChild(photoItem);
         });
+
+        if (isPhotoDeleteMode) updatePhotoSelectionVisuals();
     }
+
+    // --- Photo Delete Mode Logic ---
+    let isPhotoDeleteMode = false;
+    let selectedPhotos = new Set();
+
 
     function setupDetailViewEventListeners(albumId) {
         // Breadcrumb back to albums
@@ -318,78 +507,115 @@ document.addEventListener('DOMContentLoaded', async () => {
                 switchView('manage-albums-view');
             });
         }
-        
+
         // Upload button functionality
         const uploadBtn = document.getElementById('uploadToAlbumBtn');
         const uploadInput = document.getElementById('uploadPhotosInput');
-        
+
         if (uploadBtn && uploadInput) {
             uploadBtn.addEventListener('click', () => uploadInput.click());
             uploadInput.addEventListener('change', (e) => handlePhotoUpload(e, albumId));
         }
-        
-        // Photo selection functionality
-        setupPhotoSelection();
-        
+
+        // --- New Delete Mode Logic ---
+        const toggleBtn = document.getElementById('togglePhotoDeleteModeBtn');
+        const deleteBtn = document.getElementById('deleteSelectedPhotosBtn');
+        const deleteText = document.getElementById('photoDeleteModeBtnText');
+        const selectedCount = document.getElementById('selectedPhotoCount');
+
+        if (toggleBtn) {
+            // Reset state when opening view
+            isPhotoDeleteMode = false;
+            selectedPhotos.clear();
+
+            // Store new listener to avoid duplicates if possible, or just replace logic.
+            // Since this runs on view load, we should remove old if necessary, but cloneNode(true) is a hack.
+            // Better: use a named function or rely on the fact this function runs once per view load?
+            // Wait, loadAlbumDetailView calls this. It overwrites innerHTML, so elements are new. Listeners are fresh.
+
+            toggleBtn.addEventListener('click', () => {
+                isPhotoDeleteMode = !isPhotoDeleteMode;
+                if (isPhotoDeleteMode) {
+                    toggleBtn.classList.replace('bg-gray-100', 'bg-red-100');
+                    toggleBtn.classList.replace('text-gray-700', 'text-red-700');
+                    toggleBtn.classList.replace('border-gray-300', 'border-red-300');
+                    if (deleteText) deleteText.textContent = "Exit";
+                    if (deleteBtn) deleteBtn.style.display = 'flex';
+                } else {
+                    toggleBtn.classList.replace('bg-red-100', 'bg-gray-100');
+                    toggleBtn.classList.replace('text-red-700', 'text-gray-700');
+                    toggleBtn.classList.replace('border-red-300', 'border-gray-300');
+                    if (deleteText) deleteText.textContent = "Select";
+                    if (deleteBtn) deleteBtn.style.display = 'none';
+                    selectedPhotos.clear();
+                    updatePhotoSelectionVisuals();
+                }
+            });
+        }
+
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                const count = selectedPhotos.size;
+                if (count === 0) return;
+
+                showConfirmationModal(
+                    "Delete Photos",
+                    `Are you sure you want to permanently delete ${count} photo(s)? This cannot be undone.`,
+                    () => deleteSelectedPhotos(albumId)
+                );
+            });
+        }
+
         // Lightbox functionality
         setupLightbox();
     }
 
-    function setupPhotoSelection() {
-        let selectedPhotos = [];
-        const actionBar = document.getElementById('photo-action-bar');
-        const selectionCount = document.getElementById('selection-count');
-        
-        if (!DOMElements.photoGrid) return;
-        
-        DOMElements.photoGrid.addEventListener('change', (e) => {
-            if (e.target.classList.contains('photo-checkbox')) {
-                const photoId = e.target.dataset.photoId;
-                if (e.target.checked) {
-                    selectedPhotos.push(photoId);
-                } else {
-                    selectedPhotos = selectedPhotos.filter(id => id !== photoId);
-                }
-                
-                // Update selection UI
-                if (selectedPhotos.length > 0) {
-                    actionBar.style.display = 'flex';
-                    selectionCount.textContent = `${selectedPhotos.length} photo${selectedPhotos.length !== 1 ? 's' : ''} selected`;
-                } else {
-                    actionBar.style.display = 'none';
-                }
+    async function deleteSelectedPhotos(albumId) {
+        showToast("Deleting photos...", "info");
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`/api/albums/${albumId}/photos/batch`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ photo_ids: Array.from(selectedPhotos) })
+            });
+
+            if (response.ok) {
+                showToast("Photos deleted successfully", "success");
+                selectedPhotos.clear();
+                // Refresh photos
+                await loadAlbumPhotos(albumId);
+                updatePhotoSelectionVisuals();
+            } else {
+                const data = await response.json();
+                showToast(data.error || "Failed to delete photos", "error");
+            }
+        } catch (e) {
+            console.error(e);
+            showToast("Error deleting photos", "error");
+        }
+    }
+
+    function updatePhotoSelectionVisuals() {
+        const selectedCount = document.getElementById('selectedPhotoCount');
+        if (selectedCount) selectedCount.textContent = selectedPhotos.size;
+
+        const items = DOMElements.photoGrid.querySelectorAll('.photo-item');
+        items.forEach(item => {
+            const id = item.dataset.photoId;
+            const checkmark = item.querySelector('.selection-checkmark');
+
+            if (selectedPhotos.has(id)) {
+                item.classList.add('ring-4', 'ring-red-500', 'scale-95');
+                if (checkmark) checkmark.style.display = 'flex';
+            } else {
+                item.classList.remove('ring-4', 'ring-red-500', 'scale-95');
+                if (checkmark) checkmark.style.display = 'none';
             }
         });
-        
-        // Clear selection button
-        const clearBtn = document.getElementById('clearSelectionBtn');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => {
-                selectedPhotos = [];
-                document.querySelectorAll('.photo-checkbox').forEach(cb => cb.checked = false);
-                actionBar.style.display = 'none';
-            });
-        }
-        
-        // Download selected button
-        const downloadBtn = document.getElementById('downloadSelectedBtn');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => {
-                // TODO: Implement bulk download functionality
-                showToast('Download functionality coming soon!', 'info');
-            });
-        }
-        
-        // Delete selected button
-        const deleteBtn = document.getElementById('deleteSelectedBtn');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => {
-                if (confirm(`Are you sure you want to delete ${selectedPhotos.length} photo${selectedPhotos.length !== 1 ? 's' : ''}?`)) {
-                    // TODO: Implement bulk delete functionality
-                    showToast('Delete functionality coming soon!', 'info');
-                }
-            });
-        }
     }
 
     function setupLightbox() {
@@ -399,34 +625,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         const closeLightbox = document.getElementById('close-lightbox');
         const prevBtn = document.getElementById('lightbox-prev');
         const nextBtn = document.getElementById('lightbox-next');
-        
+
         let currentPhotoIndex = 0;
         let currentPhotos = [];
-        
-        window.openLightbox = function(photo, photos) {
+
+        window.openLightbox = function (photo, photos) {
             currentPhotos = photos;
             currentPhotoIndex = photos.findIndex(p => p.id === photo.id);
             showPhoto(currentPhotoIndex);
             lightboxModal.style.display = 'flex';
         };
-        
+
         function showPhoto(index) {
             if (index < 0 || index >= currentPhotos.length) return;
-            
+
             const photo = currentPhotos[index];
             lightboxImage.src = photo.url;
             lightboxCaption.textContent = photo.name;
-            
+
             prevBtn.disabled = index === 0;
             nextBtn.disabled = index === currentPhotos.length - 1;
         }
-        
+
         if (closeLightbox) {
             closeLightbox.addEventListener('click', () => {
                 lightboxModal.style.display = 'none';
             });
         }
-        
+
         if (prevBtn) {
             prevBtn.addEventListener('click', () => {
                 if (currentPhotoIndex > 0) {
@@ -435,7 +661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        
+
         if (nextBtn) {
             nextBtn.addEventListener('click', () => {
                 if (currentPhotoIndex < currentPhotos.length - 1) {
@@ -444,14 +670,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        
+
         // Close lightbox when clicking outside
         lightboxModal.addEventListener('click', (e) => {
             if (e.target === lightboxModal) {
                 lightboxModal.style.display = 'none';
             }
         });
-        
+
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (lightboxModal.style.display === 'flex') {
@@ -469,38 +695,82 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function handlePhotoUpload(event, albumId) {
         const files = Array.from(event.target.files);
         if (files.length === 0) return;
-        
-        showToast('Uploading photos...', 'info');
-        
+
+        // Get overlay elements
+        const overlay = document.getElementById('upload-loading-overlay');
+        const statusTitle = document.getElementById('upload-status-title');
+        const statusText = document.getElementById('upload-status-text');
+        const progressBar = document.getElementById('upload-progress-bar');
+        const phaseText = document.getElementById('upload-phase-text');
+
+        // Show loading overlay
+        overlay.style.display = 'flex';
+        statusTitle.textContent = 'Uploading Photos...';
+        statusText.textContent = `0 of ${files.length} photos uploaded`;
+        progressBar.style.width = '0%';
+        phaseText.textContent = 'Phase 1 of 2: Uploading photos & generating face embeddings';
+
         try {
             const token = localStorage.getItem('authToken');
-            
+            let uploadedCount = 0;
+            let failedCount = 0;
+
             for (const file of files) {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('album', albumId);
-                
-                const response = await fetch('/api/upload-single-file', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Failed to upload ${file.name}`);
+
+                statusText.textContent = `Uploading: ${file.name}`;
+
+                try {
+                    const response = await fetch('/api/upload-single-file', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        uploadedCount++;
+                    } else {
+                        failedCount++;
+                    }
+                } catch (err) {
+                    failedCount++;
                 }
+
+                // Update progress
+                const progress = ((uploadedCount + failedCount) / files.length) * 100;
+                progressBar.style.width = `${progress}%`;
+                statusText.textContent = `${uploadedCount} of ${files.length} photos processed`;
             }
-            
-            showToast('Photos uploaded successfully!', 'success');
-            
+
+            // Phase 2: Finalize
+            phaseText.textContent = 'Phase 2 of 2: Finalizing...';
+            statusText.textContent = 'Almost done!';
+            progressBar.style.width = '100%';
+
+            // Small delay to show completion
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Hide overlay
+            overlay.style.display = 'none';
+
+            // Show result
+            if (failedCount === 0) {
+                showToast(`${uploadedCount} photos uploaded successfully!`, 'success');
+            } else {
+                showToast(`${uploadedCount} uploaded, ${failedCount} failed`, 'warning');
+            }
+
             // Reload photos
             await loadAlbumPhotos(albumId);
-            
+
         } catch (error) {
             console.error('Upload error:', error);
-            showToast('Failed to upload some photos', 'error');
+            overlay.style.display = 'none';
+            showToast('Failed to upload photos', 'error');
         }
-        
+
         // Reset the input
         event.target.value = '';
     }
@@ -518,13 +788,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to generate links.');
-            
+
             DOMElements.shareLinkVipInput.value = data.vip_link;
             DOMElements.shareLinkFullInput.value = data.full_access_link;
-            
+
             setAccessLevel('vip');
             DOMElements.shareModal.style.display = 'flex';
-            
+
         } catch (error) {
             showToast(`Error: ${error.message}`, "error");
         }
@@ -641,7 +911,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function initializePage() {
         // Wait a bit for global auth to initialize first
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         if (await checkLoginStatusForAlbums()) {
             setupAlbumPageForRole();
             switchView('manage-albums-view');

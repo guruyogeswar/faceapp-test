@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Albums - Aadishree</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/style.css"/>
-    <link rel="stylesheet" href="css/albums.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/albums.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // Basic Tailwind configuration
@@ -32,7 +34,8 @@
         }
     </script>
 </head>
-<body class="tailwind-body"> 
+
+<body class="tailwind-body">
     <header class="header-main">
         <div class="container header-container">
             <nav class="header-nav">
@@ -51,7 +54,8 @@
                     <a href="login.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Log In</a>
                     <a href="signin.html" id="signinBtnNav" class="btn btn-primary btn-sm">Sign Up</a>
                     <div id="profileDropdownContainer" class="profile-dropdown" style="display: none;">
-                        <button id="profileDropdownButton" class="profile-dropdown-button" aria-expanded="false" aria-haspopup="true">
+                        <button id="profileDropdownButton" class="profile-dropdown-button" aria-expanded="false"
+                            aria-haspopup="true">
                             <span id="profileInitials" class="profile-initials-text">JD</span>
                         </button>
                         <div id="profileDropdownMenu" class="profile-dropdown-menu hidden">
@@ -65,7 +69,8 @@
                                         <p id="dropdownUserEmail" class="profile-user-email">john.doe@example.com</p>
                                     </div>
                                 </div>
-                                <a href="manage_account.html" id="manageAccountLink" class="profile-manage-link">Manage your Account</a>
+                                <a href="manage_account.html" id="manageAccountLink" class="profile-manage-link">Manage
+                                    your Account</a>
                             </div>
                             <div class="profile-dropdown-footer">
                                 <a href="#" id="logoutBtnDropdown" class="profile-dropdown-item logout-link">
@@ -90,16 +95,18 @@
             <a href="pricing.html" class="nav-link-item-mobile">Pricing</a>
             <a href="contact.html" class="nav-link-item-mobile">Contact Us</a>
             <div class="mobile-auth-section">
-                <a href="login.html" id="loginBtnNavMobile" class="btn btn-secondary btn-sm btn-full-width btn-margin-bottom">Log In</a>
-                <a href="signin.html" id="signinBtnNavMobile" class="btn btn-primary btn-sm btn-full-width btn-margin-bottom">Sign Up</a>
+                <a href="login.html" id="loginBtnNavMobile"
+                    class="btn btn-secondary btn-sm btn-full-width btn-margin-bottom">Log In</a>
+                <a href="signin.html" id="signinBtnNavMobile"
+                    class="btn btn-primary btn-sm btn-full-width btn-margin-bottom">Sign Up</a>
                 <div id="profileContainerMobile" style="display:none;">
                     <div class="profile-user-info-mobile">
                         <div class="profile-initials-avatar-sm">
-                           <span id="profileInitialsMobile">JD</span>
+                            <span id="profileInitialsMobile">JD</span>
                         </div>
                         <div>
-                           <p id="userNameMobile" class="profile-user-name-sm">John Doe</p>
-                           <p id="userEmailMobile" class="profile-user-email-sm">john.doe@example.com</p>
+                            <p id="userNameMobile" class="profile-user-name-sm">John Doe</p>
+                            <p id="userEmailMobile" class="profile-user-email-sm">john.doe@example.com</p>
                         </div>
                     </div>
                     <a href="#" id="logoutBtnNavMobile" class="btn btn-danger-outline btn-sm btn-full-width">
@@ -110,45 +117,76 @@
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-8 min-h-screen"> 
-        <div id="login-prompt" style="display: none;" class="text-center p-8 bg-white rounded-xl shadow-lg max-w-md mx-auto mt-10">
+    <main class="container mx-auto px-4 py-8 min-h-screen">
+        <div id="login-prompt" style="display: none;"
+            class="text-center p-8 bg-white rounded-xl shadow-lg max-w-md mx-auto mt-10">
             <i class="fas fa-sign-in-alt fa-3x text-primary mb-4"></i>
             <h2 class="text-2xl font-semibold mb-3">Please Log In</h2>
             <p class="text-gray-color mb-6">You need to be logged in to manage your albums.</p>
-            <a href="login.html" class="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors">Go to Login</a>
+            <a href="login.html"
+                class="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors">Go
+                to Login</a>
         </div>
 
         <div id="albums-main-content" style="display: none;">
-            <div class="mb-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-0 border-b border-gray-200 pb-0">
-                <button data-view="manage-albums" class="nav-tab-button active-tab flex items-center space-x-2 px-6 py-3 font-medium text-gray-700">
+            <div
+                class="mb-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-0 border-b border-gray-200 pb-0">
+                <button data-view="manage-albums"
+                    class="nav-tab-button active-tab flex items-center space-x-2 px-6 py-3 font-medium text-gray-700">
                     <i class="fas fa-images"></i>
                     <span>Manage Albums</span>
                 </button>
             </div>
-            
+
             <div id="view-container">
                 <section id="manage-albums-view" class="view-section">
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
                         <h2 class="text-3xl font-semibold text-dark-color mb-4 sm:mb-0">Your Albums</h2>
-                        <button id="createAlbumBtn" class="bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary-dark transition-colors flex items-center space-x-2">
-                            <i class="fas fa-plus"></i>
-                            <span>Create New Album</span>
-                        </button>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <!-- Delete Mode Toggle -->
+                            <button id="toggleDeleteModeBtn"
+                                class="text-primary border border-primary px-4 py-2.5 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-600 transition-colors flex items-center space-x-2">
+                                <i class="fas fa-check-circle"></i>
+                                <span id="deleteModeBtnText">Select to Delete</span>
+                            </button>
+
+                            <!-- Delete Action Button (Hidden by default) -->
+                            <button id="deleteSelectedBtn" style="display: none;"
+                                class="bg-red-600 text-white px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>Delete (<span id="selectedCount">0</span>)</span>
+                            </button>
+
+                            <button id="createAlbumBtn"
+                                class="bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2">
+                                <i class="fas fa-plus"></i>
+                                <span>Create New Album</span>
+                            </button>
+                        </div>
                     </div>
-                    <div id="createAlbumFormContainer" style="display: none;" class="mb-6 p-6 bg-white rounded-xl shadow-lg">
+                    <div id="createAlbumFormContainer" style="display: none;"
+                        class="mb-6 p-6 bg-white rounded-xl shadow-lg">
                         <form id="createAlbumForm" class="space-y-4">
                             <div>
-                                <label for="newAlbumName" class="block text-sm font-medium text-gray-700 mb-1">Album Name:</label>
-                                <input type="text" id="newAlbumName" name="newAlbumName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="e.g., Summer Vacation 2024">
+                                <label for="newAlbumName" class="block text-sm font-medium text-gray-700 mb-1">Album
+                                    Name:</label>
+                                <input type="text" id="newAlbumName" name="newAlbumName" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                                    placeholder="e.g., Summer Vacation 2024">
                             </div>
                             <div class="flex justify-end space-x-3">
-                                <button type="button" id="cancelCreateAlbumBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
-                                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark">Save Album</button>
+                                <button type="button" id="cancelCreateAlbumBtn"
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                                <button type="submit"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark">Save
+                                    Album</button>
                             </div>
                         </form>
                     </div>
 
-                    <div id="album-grid-loader" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6" style="display: none;">
+                    <div id="album-grid-loader"
+                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6"
+                        style="display: none;">
                         <div class="bg-white rounded-xl shadow-md overflow-hidden animate-pulse">
                             <div class="w-full h-48 bg-gray-300"></div>
                             <div class="p-4">
@@ -172,29 +210,51 @@
             </div>
         </div>
     </main>
+    <!-- Upload Loading Overlay -->
+    <div id="upload-loading-overlay"
+        class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200]" style="display: none;">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 text-center">
+            <div class="mb-6">
+                <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto">
+                </div>
+            </div>
+            <h3 id="upload-status-title" class="text-xl font-semibold text-gray-800 mb-2">Uploading Photos...</h3>
+            <p id="upload-status-text" class="text-gray-600 mb-4">Preparing upload...</p>
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+                <div id="upload-progress-bar" class="bg-primary h-3 rounded-full transition-all duration-300"
+                    style="width: 0%"></div>
+            </div>
+            <p id="upload-phase-text" class="text-sm text-gray-500">Phase 1 of 2: Uploading photos</p>
+        </div>
+    </div>
 
     <div id="toast-container" class="fixed bottom-5 right-5 space-y-3 z-[100]">
     </div>
 
-    <div id="share-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100]" style="display: none;">
+    <div id="share-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100]"
+        style="display: none;">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full relative mx-4">
-            <button id="close-share-modal" class="absolute top-3 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+            <button id="close-share-modal"
+                class="absolute top-3 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
             <h3 class="text-xl font-semibold mb-4">Share Album</h3>
-            
+
             <label class="block text-sm font-medium text-gray-700 mb-1">Access level</label>
             <div class="relative">
-                <button id="access-level-button" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary p-2.5 flex justify-between items-center text-left">
+                <button id="access-level-button"
+                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary p-2.5 flex justify-between items-center text-left">
                     <div class="flex items-center">
                         <i id="access-level-icon" class="fas fa-lock mr-2 text-gray-500"></i>
                         <div>
                             <p id="access-level-text" class="font-semibold">VIP Access</p>
-                            <p id="access-level-subtext" class="text-xs text-gray-500">Requires sign in for face recognition.</p>
+                            <p id="access-level-subtext" class="text-xs text-gray-500">Requires sign in for face
+                                recognition.</p>
                         </div>
                     </div>
                     <i class="fas fa-chevron-down text-gray-500"></i>
                 </button>
 
-                <div id="access-level-dropdown" class="absolute z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-full mt-1 border">
+                <div id="access-level-dropdown"
+                    class="absolute z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-full mt-1 border">
                     <ul class="p-2 text-sm text-gray-700">
                         <li>
                             <a href="#" class="block p-3 hover:bg-gray-100 rounded-lg" data-access-type="vip">
@@ -202,14 +262,15 @@
                                     <i class="fas fa-lock w-6 text-gray-500"></i>
                                     <div>
                                         <div class="font-semibold">VIP Access</div>
-                                        <div class="text-xs text-gray-500">Only people with an account can find their photos using face recognition.</div>
+                                        <div class="text-xs text-gray-500">Only people with an account can find their
+                                            photos using face recognition.</div>
                                     </div>
                                 </div>
                             </a>
                         </li>
                         <li>
                             <a href="#" class="block p-3 hover:bg-gray-100 rounded-lg" data-access-type="full">
-                               <div class="flex items-center">
+                                <div class="flex items-center">
                                     <i class="fas fa-globe w-6 text-gray-500"></i>
                                     <div>
                                         <div class="font-semibold">Full Access</div>
@@ -226,8 +287,10 @@
 
             <div id="vip-link-container">
                 <div class="flex items-center space-x-2 bg-gray-100 p-2 rounded-md border border-gray-300">
-                    <input type="text" id="share-link-vip-input" readonly class="flex-grow bg-transparent border-none focus:ring-0 text-sm text-gray-800">
-                    <button data-link-type="vip" class="copy-share-link-btn px-4 py-2 bg-primary text-white text-sm font-semibold rounded-md hover:bg-primary-dark transition-colors flex items-center space-x-2">
+                    <input type="text" id="share-link-vip-input" readonly
+                        class="flex-grow bg-transparent border-none focus:ring-0 text-sm text-gray-800">
+                    <button data-link-type="vip"
+                        class="copy-share-link-btn px-4 py-2 bg-primary text-white text-sm font-semibold rounded-md hover:bg-primary-dark transition-colors flex items-center space-x-2">
                         <i class="fas fa-copy"></i>
                         <span>Copy</span>
                     </button>
@@ -236,8 +299,10 @@
 
             <div id="full-link-container" style="display: none;">
                 <div class="flex items-center space-x-2 bg-gray-100 p-2 rounded-md border border-gray-300">
-                    <input type="text" id="share-link-full-input" readonly class="flex-grow bg-transparent border-none focus:ring-0 text-sm text-gray-800">
-                    <button data-link-type="full" class="copy-share-link-btn px-4 py-2 bg-secondary text-white text-sm font-semibold rounded-md hover:bg-green-600 transition-colors flex items-center space-x-2">
+                    <input type="text" id="share-link-full-input" readonly
+                        class="flex-grow bg-transparent border-none focus:ring-0 text-sm text-gray-800">
+                    <button data-link-type="full"
+                        class="copy-share-link-btn px-4 py-2 bg-secondary text-white text-sm font-semibold rounded-md hover:bg-green-600 transition-colors flex items-center space-x-2">
                         <i class="fas fa-copy"></i>
                         <span>Copy</span>
                     </button>
@@ -246,6 +311,31 @@
         </div>
     </div>
 
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110]"
+        style="display: none;">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 transform transition-all scale-100">
+            <div class="text-center mb-6">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900" id="modal-title">Confirm Deletion</h3>
+                <p class="text-sm text-gray-500 mt-2" id="modal-message">Are you sure you want to delete these items?
+                    This action cannot be undone.</p>
+            </div>
+            <div class="flex justify-center space-x-3">
+                <button id="modal-cancel-btn"
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors">
+                    Cancel
+                </button>
+                <button id="modal-confirm-btn"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <div class="container">
@@ -280,4 +370,5 @@
         document.getElementById('currentYear').textContent = new Date().getFullYear();
     </script>
 </body>
+
 </html>

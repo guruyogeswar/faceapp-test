@@ -21,6 +21,7 @@ from db import (
     update_user_reference_photo,
     update_user_password,
     init_db,
+    delete_album,
 )
 from auth import create_token, verify_token, authenticate_user
 
@@ -483,8 +484,24 @@ def create_album():
     
     created, message = add_album(username, album_id, album_display_name)
     if not created:
-        status_code = 404 if message == "Photographer not found." else 409
-        return jsonify({"error": message}), status_code
+        if message == "Album ID already exists for this photographer.":
+            # Check for "Zombie" state: Exists in DB but not in R2 (or empty in R2)
+            # This happens if a user deleted an album before the DB-deletion fix was applied.
+            prefix = f"event_albums/{username}/{album_id}/"
+            # distinct check: verify if there are any actual photos or if it's truly empty/gone
+            existing_files = list_objects(prefix, limit=2)
+            # Filter out placeholder if it's the only thing (though usually deletion removes it too)
+            actual_files = [f for f in existing_files if not f.endswith('.placeholder') and not f.endswith('/')]
+            
+            if not actual_files:
+                print(f"Detected zombie album '{album_id}' for {username}. Cleaning up DB and retrying creation.", flush=True)
+                delete_album(username, album_id)
+                # Retry creation
+                created, message = add_album(username, album_id, album_display_name)
+        
+        if not created:
+            status_code = 404 if message == "Photographer not found." else 409
+            return jsonify({"error": message}), status_code
     
     r2_placeholder_path = f"event_albums/{username}/{album_id}/.placeholder"
     temp_placeholder_file = os.path.join(UPLOAD_FOLDER, f"{uuid.uuid4()}_.placeholder")
@@ -495,6 +512,8 @@ def create_album():
     if upload_success:
         return jsonify({"message": "Album created successfully", "album": {"id": album_id, "name": album_display_name}}), 201
     else:
+        # If R2 fails, we should rollback the DB entry to avoid creating a new zombie
+        delete_album(username, album_id) 
         return jsonify({"error": "Failed to create album in storage"}), 500
 
 @app.route('/api/upload-single-file', methods=['POST'])
@@ -525,6 +544,25 @@ def upload_single_file_route():
         os.remove(local_path)
         
         if upload_success:
+            # Call ML API to generate face embeddings for this photo
+            try:
+                embedding_file_name = f"{username}-{album_id}_embeddings.json"
+                ml_response = requests.post(
+                    f"{ML_API_BASE_URL}add_embeddings_from_urls/",
+                    data={
+                        "urls": [public_url],
+                        "embedding_file": embedding_file_name
+                    },
+                    timeout=120
+                )
+                if ml_response.status_code == 200:
+                    ml_data = ml_response.json()
+                    print(f"Embeddings generated: {ml_data.get('added_count', 0)} faces added for {original_filename}")
+                else:
+                    print(f"Warning: ML API returned {ml_response.status_code} for {original_filename}")
+            except requests.exceptions.RequestException as e:
+                print(f"Warning: Could not generate embeddings for {original_filename}: {e}")
+            
             return jsonify({"success": True, "name": original_filename, "url": public_url, "id": unique_name}), 200
         else:
             return jsonify({"success": False, "error": "Failed to upload to R2 storage."}), 500
@@ -662,6 +700,106 @@ def get_album_photos(album_id):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": "Authentication required or failed to fetch photos.", "details": str(e)}), 401
+
+@app.route('/api/albums/batch', methods=['DELETE'])
+def delete_albums_batch():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        payload = verify_token(token)
+        username = payload['sub']
+        if payload.get('role') != 'photographer':
+            return jsonify({"error": "Only photographers can delete albums."}), 403
+    except Exception as e:
+        return jsonify({"error": "Authentication failed", "details": str(e)}), 401
+
+    data = request.get_json()
+    album_ids = data.get('album_ids', [])
+    if not album_ids:
+        return jsonify({"error": "No album IDs provided."}), 400
+
+    deleted_count = 0
+    errors = []
+
+    for album_id in album_ids:
+        try:
+            # 1. List all files in the album
+            prefix = f"event_albums/{username}/{album_id}/"
+            all_files = list_objects(prefix)
+            
+            # 2. Delete all files from R2
+            for file_key in all_files:
+                delete_from_r2(file_key)
+            
+            # 3. Remove from database
+            delete_album(username, album_id)
+            
+            # 4. Remove embedding file from R2 (if it exists separately, though usually in embeddings folder)
+            embedding_file = f"user_profiles/{username}/{username}-{album_id}_embeddings.json" # Potential location check
+            # Since embeddings are managed by ML API and stored in R2 bucket root or specific path,
+            # we might leave them or try to clean up if we knew the path. 
+            # Current ML API logic stores them in root with format: {username}-{album_id}_embeddings.json
+            embedding_filename = f"{username}-{album_id}_embeddings.json"
+            delete_from_r2(embedding_filename)
+
+            deleted_count += 1
+        except Exception as e:
+            errors.append(f"Failed to delete {album_id}: {str(e)}")
+
+    return jsonify({
+        "message": f"Deleted {deleted_count} albums.",
+        "errors": errors
+    })
+
+
+@app.route('/api/albums/<album_id>/photos/batch', methods=['DELETE'])
+def delete_photos_batch(album_id):
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        payload = verify_token(token)
+        username = payload['sub']
+        if payload.get('role') != 'photographer':
+            return jsonify({"error": "Only photographers can delete photos."}), 403
+    except Exception as e:
+        return jsonify({"error": "Authentication failed", "details": str(e)}), 401
+
+    data = request.get_json()
+    photo_ids = data.get('photo_ids', [])
+    if not photo_ids:
+        return jsonify({"error": "No photo IDs provided."}), 400
+
+    deleted_urls = []
+    errors = []
+
+    # 1. Delete from R2
+    for photo_id in photo_ids:
+        r2_path = f"event_albums/{username}/{album_id}/{photo_id}"
+        success, error = delete_from_r2(r2_path)
+        if success:
+            deleted_urls.append(get_object_url(r2_path))
+        else:
+            errors.append(f"Failed to delete {photo_id}: {error}")
+
+    # 2. Call ML API to remove embeddings
+    if deleted_urls:
+        try:
+            embedding_file_name = f"{username}-{album_id}_embeddings.json"
+            requests.post(
+                f"{ML_API_BASE_URL}remove_embedding/",
+                data={
+                    "embedding_file": embedding_file_name,
+                    "image_urls": json.dumps(deleted_urls)
+                },
+                timeout=30
+            )
+        except Exception as e:
+            print(f"Warning: Failed to remove embeddings for deleted photos: {e}")
+            # Don't fail the request if just embedding removal fails, but log it usually
+
+    return jsonify({
+        "message": f"Deleted {len(deleted_urls)} photos.",
+        "errors": errors
+    })
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get("PORT", 8000)))
