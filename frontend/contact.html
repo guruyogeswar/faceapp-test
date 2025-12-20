@@ -29,7 +29,7 @@
                     <a href="contact.html" class="nav-link-item active">Contact Us</a>
                 </div>
                 <div class="auth-links-desktop">
-                    <a href="getaquote.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Ask for Quote</a>
+                    <!-- <a href="getaquote.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Ask for Quote</a> -->
                     <!-- <a href="signin.html" id="signinBtnNav" class="btn btn-primary btn-sm">Sign Up</a> -->
                     <div id="profileDropdownContainer" class="profile-dropdown" style="display: none;">
                         <button id="profileDropdownButton" class="profile-dropdown-button" aria-expanded="false"
@@ -72,8 +72,8 @@
             <a href="albums.html" class="nav-link-item-mobile">Albums</a>
             <!-- <a href="pricing.html" class="nav-link-item-mobile">Pricing</a> -->
             <a href="contact.html" class="nav-link-item-mobile active">Contact Us</a>
-            <div class="mobile-auth-section">
-                <a href="getaquote.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Ask for Quote</a>
+                <div class="mobile-auth-section">
+                <!-- <a href="getaquote.html" id="loginBtnNav" class="btn btn-secondary btn-sm">Ask for Quote</a> -->
 
                 <!-- <a href="login.html" id="loginBtnNavMobile" class="btn btn-secondary btn-sm btn-full-width btn-margin-bottom">Log In</a> -->
                 <!-- <a href="signin.html" id="signinBtnNavMobile" class="btn btn-primary btn-sm btn-full-width btn-margin-bottom">Sign Up</a> -->
@@ -154,8 +154,8 @@
                             <div class="channel-icon"><i class="fas fa-phone"></i></div>
                             <div>
                                 <h3>Call us</h3>
-                                <a href="tel:+15551234567">+1 (555) 123-4567</a>
-                                <p>Monday - Friday &middot; 9:00 AM - 5:00 PM PST</p>
+                                <a href="tel:+91 6382919061">+91 6382919061</a>
+                                <p>Monday - Friday &middot; 9:00 AM - 8:00 PM PST</p>
                             </div>
                         </div>
                         <div class="contact-channel">
@@ -190,44 +190,46 @@
                 <div class="contact-form-card">
                     <h2>Tell us about your next event</h2>
                     <p class="contact-form-subtext">
-                        Share a few details and we'll schedule a discovery call tailored to your business goals.
+                        Share a few details and we'll schedule a discovery call tailored to your event.
                     </p>
-                    <form id="contactForm" class="contact-form-body">
+                    <form id="contactForm" class="contact-form-body" onsubmit="sendForm(event)">
                         <div class="form-grid">
                             <div class="form-field">
                                 <label for="name">Full name</label>
-                                <input type="text" id="name" name="name" placeholder="Alex Patel" required>
+                                <input type="text" id="name" name="name" placeholder="Akash Patel" required>
                             </div>
                             <div class="form-field">
-                                <label for="email">Work email</label>
-                                <input type="email" id="email" name="email" placeholder="alex@studio.com" required>
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" placeholder="akashpatel@gmail.com" required>
                             </div>
                             <div class="form-field">
                                 <label for="phone">Phone number</label>
-                                <input type="tel" id="phone" name="phone" placeholder="+1 555 123 4567">
-                            </div>
-                            <div class="form-field">
-                                <label for="company">Studio or company</label>
-                                <input type="text" id="company" name="company" placeholder="Your company name">
+                                <input type="tel" id="phone" name="phone" placeholder="+91 6421335679">
                             </div>
                             <div class="form-field">
                                 <label for="city">City</label>
-                                <input type="text" id="city" name="city" placeholder="San Francisco, CA">
+                                <input type="text" id="city" name="city" placeholder="Chennai, Tamil Nadu">
                             </div>
                             <div class="form-field">
                                 <label for="topic">How can we help?</label>
-                                <select id="topic" name="topic">
-                                    <option value="" selected>Choose a topic</option>
-                                    <option value="demo">Product demo</option>
-                                    <option value="pricing">Pricing &amp; plans</option>
-                                    <option value="partnership">Partnership</option>
-                                    <option value="support">Technical support</option>
+                                <select id="topic" name="topic"required>
+                                    <option value="" disabled selected>Choose your Event</option>
+                                    <option value="diksha shoot">Diksha Shoot</option>
+                                    <option value="Sangh Shoot">Sangh Shoot</option>
+                                    <option value="Pratishtha Shoot">Pratishtha Shoot</option>
+                                    <option value="Wedding Shoot">Wedding Shoot</option>
+                                    <option value="Pre-Wedding Shoot">Pre-Wedding Shoot</option>
+                                    <option value="Parties">Parties</option>
+                                    <option value="Maternity">Maternity</option>
+                                    <option value="Baby Shower">Baby Shower</option>
+                                    <option value="Corporate Shoot">Corporate Shoot</option>
+                                    <option value="Event Live Telecast">Event Live Telecast</option>
                                 </select>
                             </div>
                             <div class="form-field full-width">
-                                <label for="message">Project details</label>
+                                <label for="message">Event details</label>
                                 <textarea id="message" name="message"
-                                    placeholder="Share timelines, event size, integrations, or any questions"
+                                    placeholder="Share timelines, event size, location, or any questions"
                                     required></textarea>
                             </div>
                         </div>
@@ -240,7 +242,7 @@
             </div>
         </section>
 
-        <section class="contact-map">
+        <!-- <section class="contact-map">
             <div class="container">
                 <div class="map-card">
                     <div class="map-copy">
@@ -262,9 +264,9 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </section> -->
 
-        <section class="contact-cta">
+        <!-- <section class="contact-cta">
             <div class="container contact-cta-inner">
                 <h2>Ready to delight every guest with personalized galleries?</h2>
                 <p>
@@ -276,7 +278,7 @@
                     <a href="features.html" class="btn btn-outline btn-light">Explore the platform</a>
                 </div>
             </div>
-        </section>
+        </section> -->
     </main>
 
     <footer>
@@ -308,6 +310,9 @@
     <script>
         document.getElementById('currentYear').textContent = new Date().getFullYear();
     </script>
+    <!-- EmailJS SDK (used for sending emails from the frontend). Replace with your preferred provider if needed. -->
+    <script type="text/javascript" src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/script.js"></script>
     <script src="js/gloabal_auth.js"></script>
 </body>
