@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Configuration & State ---
     let currentlyDisplayedPhotos = [];
     let currentLightboxIndex = 0;
+    let currentPhotographer = '';
+    let currentAlbum = '';
 
     // --- DOM Elements ---
     const views = {
@@ -244,6 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const album = urlParams.get('album');
         const linkType = urlParams.get('type');
 
+        // Store for later use
+        currentPhotographer = photographer;
+        currentAlbum = album;
+
         if (!photographer || !album || !linkType) {
             stopLoadingAnimation();
             showView('loading');
@@ -261,21 +267,46 @@ document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('authToken');
             if (!token) {
                 stopLoadingAnimation();
-                const persistForRedirect = () => persistPendingAccess(photographer, album);
-                const setupGuestRedirect = () => {
-                    localStorage.setItem('postLoginRedirectUrl', window.location.href);
-                    persistForRedirect();
-                };
-                loginBtnGuest.addEventListener('click', (e) => { e.preventDefault(); setupGuestRedirect(); window.location.href = loginBtnGuest.href; });
-                signupBtnGuest.addEventListener('click', (e) => { e.preventDefault(); setupGuestRedirect(); window.location.href = signupBtnGuest.href; });
+                // Store redirect URL in localStorage for after registration
+                localStorage.setItem('postLoginRedirectUrl', window.location.href);
+                persistPendingAccess(photographer, album);
+
+                // Update buttons to go to VIP signup page
+                const vipSignupUrl = `vip_signup.html?redirect=${encodeURIComponent(window.location.href)}`;
+                loginBtnGuest.href = vipSignupUrl;
+                loginBtnGuest.textContent = "I've Registered Before";
+                signupBtnGuest.href = vipSignupUrl;
+                signupBtnGuest.textContent = 'Register to Find My Photos';
+
+                // Just show the guest view with updated links
                 showView('guest');
             } else {
                 startLoadingAnimation('vip');
                 await ensureVipAccess(photographer, album, token);
-                const result = await fetchPhotos(`/api/find-my-photos/${photographer}/${album}`, token);
-                stopLoadingAnimation();
-                showView('gallery');
-                renderPhotos(result.matches || []);
+
+                try {
+                    const result = await fetchPhotos(`/api/find-my-photos/${photographer}/${album}`, token);
+                    stopLoadingAnimation();
+
+                    const matches = result.matches || [];
+
+                    if (matches.length === 0) {
+                        // Show "no matches" with option to re-upload face photo
+                        showNoMatchesWithReupload(albumDisplayName);
+                    } else {
+                        showView('gallery');
+                        renderPhotos(matches);
+                    }
+                } catch (error) {
+                    stopLoadingAnimation();
+                    if (error.message.includes('reference_photo_missing') || error.message.includes('Reference photo')) {
+                        showNoMatchesWithReupload(albumDisplayName);
+                    } else {
+                        showView('loading');
+                        loadingMessage.textContent = 'Error: ' + error.message;
+                        loadingMessage.classList.add('text-red-500');
+                    }
+                }
             }
         } else if (linkType === 'full') {
             startLoadingAnimation('full');
@@ -289,6 +320,87 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingMessage.textContent = 'Error: Invalid link type specified.';
             loadingMessage.classList.add('text-red-500');
             if (loadingSubtext) loadingSubtext.classList.add('hidden');
+        }
+    };
+
+    // --- Show No Matches with Re-upload Option ---
+    const showNoMatchesWithReupload = (albumName) => {
+        photosContainer.innerHTML = `
+            <div class="col-span-full text-center py-10">
+                <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
+                    <i class="fas fa-face-frown fa-3x text-gray-400 mb-4"></i>
+                    <h2 class="text-xl font-semibold text-dark-color mb-2">No Photos Found</h2>
+                    <p class="text-gray-color mb-6">We couldn't find any photos of you in ${albumName}. This might happen if your face photo isn't clear enough.</p>
+                    
+                    <div class="border-t pt-6">
+                        <h3 class="font-medium text-dark-color mb-3">Try uploading a new face photo</h3>
+                        <form id="reupload-form" enctype="multipart/form-data" class="space-y-4">
+                            <input type="file" id="new-face-photo" name="ref_photo" accept="image/*" required
+                                class="w-full text-sm text-gray-color file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark">
+                            <p class="text-xs text-gray-400">Upload a clear, forward-facing photo of yourself</p>
+                            <button type="submit" id="reupload-btn" class="w-full bg-primary text-white py-2.5 px-4 rounded-lg hover:bg-primary-dark transition-colors">
+                                <i class="fas fa-sync-alt"></i> Re-scan Album
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+        showView('gallery');
+
+        // Handle re-upload form
+        const reuploadForm = document.getElementById('reupload-form');
+        reuploadForm.addEventListener('submit', handleReupload);
+    };
+
+    // --- Handle Face Photo Re-upload ---
+    const handleReupload = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('authToken');
+        const reuploadBtn = document.getElementById('reupload-btn');
+        const fileInput = document.getElementById('new-face-photo');
+
+        if (!fileInput.files[0]) {
+            alert('Please select a photo first.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('ref_photo', fileInput.files[0]);
+
+        try {
+            reuploadBtn.disabled = true;
+            reuploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+
+            // Upload new face photo
+            const uploadResponse = await fetch('/api/auth/vip-update-photo', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!uploadResponse.ok) {
+                const error = await uploadResponse.json();
+                throw new Error(error.error || 'Failed to upload photo');
+            }
+
+            reuploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
+
+            // Re-fetch photos with new face
+            const result = await fetchPhotos(`/api/find-my-photos/${currentPhotographer}/${currentAlbum}`, token);
+            const matches = result.matches || [];
+
+            if (matches.length === 0) {
+                alert('Still no matches found. Please try a different photo with better lighting and a clear view of your face.');
+                reuploadBtn.disabled = false;
+                reuploadBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Re-scan Album';
+            } else {
+                renderPhotos(matches);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+            reuploadBtn.disabled = false;
+            reuploadBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Re-scan Album';
         }
     };
 

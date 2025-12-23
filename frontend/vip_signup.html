@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Your Photos - Aadishree</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        .error-message {
+            color: #f87171;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .success-message {
+            color: #34d399;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .auth-logo-header {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            z-index: 10;
+        }
+
+        .auth-logo-header img {
+            height: 52px;
+            width: auto;
+            display: block;
+        }
+
+        @media (max-width: 640px) {
+            .auth-logo-header {
+                top: 16px;
+                left: 16px;
+            }
+
+            .auth-logo-header img {
+                height: 44px;
+            }
+        }
+
+        .tabs-container {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn.active {
+            color: #fff;
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .photo-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+            margin: 0 auto 1rem;
+            display: none;
+        }
+
+        .photo-preview.visible {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="auth-logo-header">
+        <a href="index.html">
+            <img src="frontend/uploads/aadishree-03.png" alt="Aadishree logo" />
+        </a>
+    </header>
+    <div class="forms-wrapper">
+        <div class="forms-container">
+            <div class="form-container" id="vip-form">
+                <h1>Find Your Photos</h1>
+                <p>Quick registration to see photos of yourself</p>
+
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="register">New Here</button>
+                    <button class="tab-btn" data-tab="login">I've Registered</button>
+                </div>
+
+                <!-- Register Tab -->
+                <div id="register-tab" class="tab-content active">
+                    <div id="register-error-message" class="error-message" style="display: none;"></div>
+                    <div id="register-success-message" class="success-message" style="display: none;"></div>
+
+                    <form id="vip-register-form" enctype="multipart/form-data">
+                        <img id="photo-preview" class="photo-preview" alt="Your photo preview">
+                        <div class="input-group">
+                            <label for="vip-name">Your Name</label>
+                            <input type="text" id="vip-name" name="name" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="vip-email">Email</label>
+                            <input type="email" id="vip-email" name="email" placeholder="Enter your email" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="vip-photo">Your Photo for Recognition</label>
+                            <input type="file" id="vip-photo" name="ref_photo" accept="image/*" required
+                                style="padding: 10px; background-color: #333; color:#fff; border-radius: 8px;">
+                        </div>
+                        <p
+                            style="font-size: 0.75rem; color: #ccc; text-align: center; margin-top: -10px; margin-bottom: 15px;">
+                            Upload a clear, forward-facing photo of yourself for face matching.
+                        </p>
+                        <button type="submit" id="register-btn" class="btn-sign">
+                            <i class="fas fa-camera"></i> Find My Photos
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Login Tab (for returning users) -->
+                <div id="login-tab" class="tab-content">
+                    <div id="login-error-message" class="error-message" style="display: none;"></div>
+                    <div id="login-success-message" class="success-message" style="display: none;"></div>
+
+                    <form id="vip-login-form">
+                        <div class="input-group">
+                            <label for="login-email">Email</label>
+                            <input type="email" id="login-email" name="email" placeholder="Enter your registered email"
+                                required>
+                        </div>
+                        <button type="submit" id="login-btn" class="btn-sign">
+                            <i class="fas fa-sign-in-alt"></i> View My Photos
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h2>Aadishree</h2>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <ul>
+                            <li><a href="features.html">Features</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+                <p>&copy; <span id="currentYear"></span> Aadishree. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Tab switching
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+
+                btn.classList.add('active');
+                document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+
+        // Photo preview
+        const photoInput = document.getElementById('vip-photo');
+        const photoPreview = document.getElementById('photo-preview');
+
+        photoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    photoPreview.src = e.target.result;
+                    photoPreview.classList.add('visible');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Get redirect URL from query params
+        function getRedirectUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect');
+            return redirect || localStorage.getItem('postLoginRedirectUrl') || 'index.html';
+        }
+
+        // Store email for future auto-login
+        function storeEmail(email) {
+            localStorage.setItem('vip_email', email);
+        }
+
+        // VIP Registration
+        const registerForm = document.getElementById('vip-register-form');
+        const registerBtn = document.getElementById('register-btn');
+        const registerError = document.getElementById('register-error-message');
+        const registerSuccess = document.getElementById('register-success-message');
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            registerError.style.display = 'none';
+            registerSuccess.style.display = 'none';
+
+            const formData = new FormData(registerForm);
+
+            if (!formData.get('name') || !formData.get('email') || !formData.get('ref_photo').size) {
+                registerError.textContent = 'Please fill out all fields and select a photo.';
+                registerError.style.display = 'block';
+                return;
+            }
+
+            try {
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+                const response = await fetch('/api/auth/vip-register', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Registration failed.');
+                }
+
+                // Store auth data
+                localStorage.setItem('authToken', result.token);
+                localStorage.setItem('username', result.username);
+                localStorage.setItem('userRole', result.role);
+                storeEmail(formData.get('email'));
+
+                registerSuccess.textContent = 'Registration successful! Redirecting...';
+                registerSuccess.style.display = 'block';
+
+                // Redirect back to event page
+                setTimeout(() => {
+                    window.location.href = getRedirectUrl();
+                }, 1000);
+
+            } catch (error) {
+                registerError.textContent = error.message;
+                registerError.style.display = 'block';
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-camera"></i> Find My Photos';
+            }
+        });
+
+        // VIP Login (returning users)
+        const loginForm = document.getElementById('vip-login-form');
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error-message');
+        const loginSuccess = document.getElementById('login-success-message');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loginError.style.display = 'none';
+            loginSuccess.style.display = 'none';
+
+            const email = document.getElementById('login-email').value.trim();
+
+            if (!email) {
+                loginError.textContent = 'Please enter your email.';
+                loginError.style.display = 'block';
+                return;
+            }
+
+            try {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+
+                const response = await fetch('/api/auth/vip-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Login failed.');
+                }
+
+                // Store auth data
+                localStorage.setItem('authToken', result.token);
+                localStorage.setItem('username', result.username);
+                localStorage.setItem('userRole', result.role);
+                storeEmail(email);
+
+                loginSuccess.textContent = 'Welcome back! Redirecting...';
+                loginSuccess.style.display = 'block';
+
+                // Redirect back to event page
+                setTimeout(() => {
+                    window.location.href = getRedirectUrl();
+                }, 1000);
+
+            } catch (error) {
+                loginError.textContent = error.message;
+                loginError.style.display = 'block';
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> View My Photos';
+            }
+        });
+
+        // Pre-fill email if available
+        const savedEmail = localStorage.getItem('vip_email');
+        if (savedEmail) {
+            document.getElementById('login-email').value = savedEmail;
+            // Switch to login tab if we have a saved email
+            document.querySelector('[data-tab="login"]').click();
+        }
+    </script>
+</body>
+
+</html>

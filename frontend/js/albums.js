@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             toast.remove();
         });
     }
-    
+
     async function checkLoginStatusForAlbums() {
         const token = localStorage.getItem('authToken');
         if (!token) {
@@ -65,10 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (!response.ok) throw new Error('Session expired');
             const data = await response.json();
-            
+
             currentUser = { username: data.username, role: data.role };
-            isAttendee = data.role === 'attendee';
-            
+            isAttendee = data.role === 'attendee' || data.role === 'vip_attendee';
+
             if (DOMElements.loginPromptDiv) DOMElements.loginPromptDiv.style.display = 'none';
             if (DOMElements.albumsMainContentDiv) DOMElements.albumsMainContentDiv.style.display = 'block';
             return true;
@@ -91,6 +91,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (createAlbumButton) createAlbumButton.style.display = 'none';
             if (h2Title) h2Title.textContent = "Albums Shared With You";
             if (createAlbumSection) createAlbumSection.style.display = 'none';
+            // Hide delete button for attendees
+            const deleteBtn = document.getElementById('toggleDeleteModeBtn');
+            if (deleteBtn) deleteBtn.style.display = 'none';
         } else { // Is photographer
             if (manageAlbumsTab) manageAlbumsTab.innerHTML = `<i class="fas fa-images"></i><span>Manage Albums</span>`;
             if (createAlbumButton) createAlbumButton.style.display = 'flex';
@@ -116,9 +119,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function fetchAlbums() {
         const token = localStorage.getItem('authToken');
         if (DOMElements.albumGridLoader) DOMElements.albumGridLoader.style.display = 'grid';
-        
+
         const endpoint = '/api/albums';
-        
+
         try {
             const response = await fetch(endpoint, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -138,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         DOMElements.albumGrid.innerHTML = '';
         const hasAlbums = albums && albums.length > 0;
-        
+
         let emptyMessage = isAttendee
             ? "No albums have been shared with you yet. When a photographer grants you access, their albums will appear here."
             : "You don't have any albums yet. Click 'Create New Album' to get started!";
@@ -153,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const card = document.createElement('div');
             card.className = 'album-card-item bg-white rounded-xl shadow-lg overflow-hidden group';
             const coverUrl = album.cover || `https://placehold.co/400x300/e0e0e0/777?text=${encodeURIComponent(album.name)}`;
-            
+
             const photographerLabel = album.photographer || 'Photographer';
             const photographerInfo = isAttendee ? `<p class="text-xs text-gray-500 mt-1">by ${photographerLabel}</p>` : '';
             const shareButtonHTML = !isAttendee ? `
@@ -175,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <p class="text-xs text-gray-500">${album.photo_count || 0} photos</p>
                     ${photographerInfo}
                 </div>`;
-            
+
             const viewTarget = `/event.html?photographer=${album.photographer}&album=${album.id}&type=vip`;
 
             if (isAttendee) {
@@ -213,26 +216,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Fetch the album detail template
             const templateResponse = await fetch('album_detail_template.html');
             const templateHTML = await templateResponse.text();
-            
+
             // Inject the template into the detail view container
             DOMElements.albumDetailView.innerHTML = templateHTML;
-            
+
             // Update DOM element references for the detail view
             updateDetailViewDOMElements();
-            
+
             // Set album name in the template
             document.getElementById('breadcrumb-album-name').textContent = albumName;
             document.getElementById('detail-album-title').textContent = albumName;
-            
+
             // Switch to the detail view
             switchView('album-detail-view');
-            
+
             // Load photos for this album
             await loadAlbumPhotos(albumId);
-            
+
             // Setup event listeners for the detail view
             setupDetailViewEventListeners(albumId);
-            
+
         } catch (error) {
             console.error('Error loading album detail view:', error);
             showToast('Failed to load album details', 'error');
@@ -248,24 +251,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadAlbumPhotos(albumId) {
         if (!DOMElements.photoGrid || !DOMElements.photoGridLoader) return;
-        
+
         try {
             // Show loading state
             DOMElements.photoGridLoader.style.display = 'grid';
             DOMElements.photoGrid.style.display = 'none';
-            
+
             // Fetch photos from the API
             const token = localStorage.getItem('authToken');
             const response = await fetch(`/api/albums/${albumId}/photos`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            
+
             if (!response.ok) throw new Error('Failed to fetch photos');
             const photos = await response.json();
-            
+
             // Display photos
             displayAlbumPhotos(photos);
-            
+
         } catch (error) {
             console.error('Error loading album photos:', error);
             showToast('Failed to load photos', 'error');
@@ -277,15 +280,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function displayAlbumPhotos(photos) {
         if (!DOMElements.photoGrid || !DOMElements.noPhotosMessage) return;
-        
+
         DOMElements.photoGrid.innerHTML = '';
         const hasPhotos = photos && photos.length > 0;
-        
+
         DOMElements.noPhotosMessage.style.display = hasPhotos ? 'none' : 'block';
         DOMElements.photoGrid.style.display = hasPhotos ? 'grid' : 'none';
-        
+
         if (!hasPhotos) return;
-        
+
         photos.forEach(photo => {
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item group relative aspect-square rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-300';
@@ -297,14 +300,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <p class="text-white text-xs truncate">${photo.name}</p>
                 </div>
             `;
-            
+
             // Add click handler for lightbox
             photoItem.addEventListener('click', (e) => {
                 if (!e.target.classList.contains('photo-checkbox')) {
                     openLightbox(photo, photos);
                 }
             });
-            
+
             DOMElements.photoGrid.appendChild(photoItem);
         });
     }
@@ -318,19 +321,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 switchView('manage-albums-view');
             });
         }
-        
+
         // Upload button functionality
         const uploadBtn = document.getElementById('uploadToAlbumBtn');
         const uploadInput = document.getElementById('uploadPhotosInput');
-        
+
         if (uploadBtn && uploadInput) {
             uploadBtn.addEventListener('click', () => uploadInput.click());
             uploadInput.addEventListener('change', (e) => handlePhotoUpload(e, albumId));
         }
-        
+
         // Photo selection functionality
         setupPhotoSelection();
-        
+
         // Lightbox functionality
         setupLightbox();
     }
@@ -339,9 +342,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let selectedPhotos = [];
         const actionBar = document.getElementById('photo-action-bar');
         const selectionCount = document.getElementById('selection-count');
-        
+
         if (!DOMElements.photoGrid) return;
-        
+
         DOMElements.photoGrid.addEventListener('change', (e) => {
             if (e.target.classList.contains('photo-checkbox')) {
                 const photoId = e.target.dataset.photoId;
@@ -350,7 +353,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else {
                     selectedPhotos = selectedPhotos.filter(id => id !== photoId);
                 }
-                
+
                 // Update selection UI
                 if (selectedPhotos.length > 0) {
                     actionBar.style.display = 'flex';
@@ -360,7 +363,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
-        
+
         // Clear selection button
         const clearBtn = document.getElementById('clearSelectionBtn');
         if (clearBtn) {
@@ -370,7 +373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 actionBar.style.display = 'none';
             });
         }
-        
+
         // Download selected button
         const downloadBtn = document.getElementById('downloadSelectedBtn');
         if (downloadBtn) {
@@ -379,7 +382,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showToast('Download functionality coming soon!', 'info');
             });
         }
-        
+
         // Delete selected button
         const deleteBtn = document.getElementById('deleteSelectedBtn');
         if (deleteBtn) {
@@ -399,34 +402,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         const closeLightbox = document.getElementById('close-lightbox');
         const prevBtn = document.getElementById('lightbox-prev');
         const nextBtn = document.getElementById('lightbox-next');
-        
+
         let currentPhotoIndex = 0;
         let currentPhotos = [];
-        
-        window.openLightbox = function(photo, photos) {
+
+        window.openLightbox = function (photo, photos) {
             currentPhotos = photos;
             currentPhotoIndex = photos.findIndex(p => p.id === photo.id);
             showPhoto(currentPhotoIndex);
             lightboxModal.style.display = 'flex';
         };
-        
+
         function showPhoto(index) {
             if (index < 0 || index >= currentPhotos.length) return;
-            
+
             const photo = currentPhotos[index];
             lightboxImage.src = photo.url;
             lightboxCaption.textContent = photo.name;
-            
+
             prevBtn.disabled = index === 0;
             nextBtn.disabled = index === currentPhotos.length - 1;
         }
-        
+
         if (closeLightbox) {
             closeLightbox.addEventListener('click', () => {
                 lightboxModal.style.display = 'none';
             });
         }
-        
+
         if (prevBtn) {
             prevBtn.addEventListener('click', () => {
                 if (currentPhotoIndex > 0) {
@@ -435,7 +438,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        
+
         if (nextBtn) {
             nextBtn.addEventListener('click', () => {
                 if (currentPhotoIndex < currentPhotos.length - 1) {
@@ -444,14 +447,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        
+
         // Close lightbox when clicking outside
         lightboxModal.addEventListener('click', (e) => {
             if (e.target === lightboxModal) {
                 lightboxModal.style.display = 'none';
             }
         });
-        
+
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (lightboxModal.style.display === 'flex') {
@@ -469,38 +472,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function handlePhotoUpload(event, albumId) {
         const files = Array.from(event.target.files);
         if (files.length === 0) return;
-        
+
         showToast('Uploading photos...', 'info');
-        
+
         try {
             const token = localStorage.getItem('authToken');
-            
+
             for (const file of files) {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('album', albumId);
-                
+
                 const response = await fetch('/api/upload-single-file', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`Failed to upload ${file.name}`);
                 }
             }
-            
+
             showToast('Photos uploaded successfully!', 'success');
-            
+
             // Reload photos
             await loadAlbumPhotos(albumId);
-            
+
         } catch (error) {
             console.error('Upload error:', error);
             showToast('Failed to upload some photos', 'error');
         }
-        
+
         // Reset the input
         event.target.value = '';
     }
@@ -518,13 +521,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to generate links.');
-            
+
             DOMElements.shareLinkVipInput.value = data.vip_link;
             DOMElements.shareLinkFullInput.value = data.full_access_link;
-            
+
             setAccessLevel('vip');
             DOMElements.shareModal.style.display = 'flex';
-            
+
         } catch (error) {
             showToast(`Error: ${error.message}`, "error");
         }
@@ -641,7 +644,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function initializePage() {
         // Wait a bit for global auth to initialize first
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         if (await checkLoginStatusForAlbums()) {
             setupAlbumPageForRole();
             switchView('manage-albums-view');

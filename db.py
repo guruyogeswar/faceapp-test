@@ -26,6 +26,18 @@ def get_user(username: str) -> Optional[User]:
         session.close()
 
 
+def get_user_by_email(email: str) -> Optional[User]:
+    """Return a detached user object for the given email address."""
+    session = db_config.get_session()
+    try:
+        user = session.query(User).filter_by(email=email).first()
+        if user:
+            session.expunge(user)
+        return user
+    finally:
+        session.close()
+
+
 def add_user(
     username: str,
     password: Optional[str],

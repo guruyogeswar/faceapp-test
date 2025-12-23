@@ -13,6 +13,7 @@ from r2_storage import upload_to_r2, list_objects, get_object_url, delete_from_r
 from db import (
     add_user,
     get_user,
+    get_user_by_email,
     add_album,
     grant_album_access,
     create_or_get_google_user,
@@ -576,7 +577,7 @@ def get_albums():
         payload = verify_token(token)
         username = payload['sub']
         
-        if payload.get('role') == 'attendee':
+        if payload.get('role') in ('attendee', 'vip_attendee'):
             return get_attendee_albums()
 
         prefix_to_search = f"event_albums/{username}/"
@@ -798,6 +799,163 @@ def delete_photos_batch(album_id):
     return jsonify({
         "message": f"Deleted {len(deleted_urls)} photos.",
         "errors": errors
+    })
+
+
+# --- VIP Registration (Simplified - No Password) ---
+
+@app.route('/api/auth/vip-register', methods=['POST'])
+def vip_register():
+    """Register a VIP attendee with name, email, and face photo only (no password)."""
+    if 'name' not in request.form or 'email' not in request.form:
+        return jsonify({"error": "Name and email are required."}), 400
+    if 'ref_photo' not in request.files:
+        return jsonify({"error": "A face photo is required for registration."}), 400
+    
+    name = request.form['name'].strip()
+    email = request.form['email'].strip().lower()
+    ref_photo = request.files['ref_photo']
+    
+    if not name or not email:
+        return jsonify({"error": "Name and email cannot be empty."}), 400
+    
+    if not allowed_file(ref_photo.filename):
+        return jsonify({"error": "Invalid file type. Please upload an image."}), 400
+    
+    # Check if email already exists
+    existing_user = get_user_by_email(email)
+    if existing_user:
+        return jsonify({"error": "This email is already registered. Please use the login option."}), 409
+    
+    # Auto-generate username from name
+    base_username = name.lower().replace(' ', '_').replace('.', '')[:20]
+    username = f"{base_username}_{uuid.uuid4().hex[:6]}"
+    
+    # Save reference photo (same flow as regular signup)
+    filename = secure_filename(ref_photo.filename)
+    unique_name = f"{uuid.uuid4()}_{filename}"
+    local_path = os.path.join(UPLOAD_FOLDER, unique_name)
+    ref_photo.save(local_path)
+    
+    r2_path = f"user_profiles/{username}/{unique_name}"
+    upload_success, _public_url = upload_to_r2(local_path, r2_path)
+    os.remove(local_path)
+    
+    if not upload_success:
+        return jsonify({"error": "Could not save reference photo."}), 500
+    
+    # Create user with vip_attendee role (no password)
+    success, message = add_user(
+        username=username,
+        password=None,
+        role="vip_attendee",
+        ref_photo_path=r2_path,
+        email=email
+    )
+    
+    if not success:
+        delete_from_r2(r2_path)
+        return jsonify({"error": message}), 409
+    
+    # Return token directly (no login step needed)
+    token = create_token(username, role="vip_attendee")
+    ref_photo_url = get_object_url(r2_path)
+    
+    return jsonify({
+        "message": "Registration successful!",
+        "token": token,
+        "username": username,
+        "role": "vip_attendee",
+        "ref_photo_url": ref_photo_url
+    }), 201
+
+
+@app.route('/api/auth/vip-login', methods=['POST'])
+def vip_login():
+    """Auto-login for returning VIP users by email lookup."""
+    data = request.get_json()
+    email = (data.get('email') or '').strip().lower()
+    
+    if not email:
+        return jsonify({"error": "Email is required."}), 400
+    
+    user = get_user_by_email(email)
+    
+    if not user:
+        return jsonify({"error": "Email not found. Please register first."}), 404
+    
+    if user.role not in ('vip_attendee', 'attendee'):
+        return jsonify({"error": "Please use the regular login page."}), 403
+    
+    # Check if user has a reference photo
+    if not user.ref_photo_path:
+        return jsonify({
+            "error": "Your registration is incomplete. Please upload a face photo.",
+            "code": "missing_photo",
+            "username": user.username
+        }), 400
+    
+    # Generate token and return
+    token = create_token(user.username, role=user.role)
+    ref_photo_url = None
+    if reference_photo_exists(user.ref_photo_path):
+        ref_photo_url = get_object_url(user.ref_photo_path)
+    
+    return jsonify({
+        "message": "Login successful!",
+        "token": token,
+        "username": user.username,
+        "role": user.role,
+        "ref_photo_url": ref_photo_url
+    })
+
+
+@app.route('/api/auth/vip-update-photo', methods=['POST'])
+def vip_update_photo():
+    """Allow VIP users to update their face photo if matching fails."""
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        payload = verify_token(token)
+        username = payload['sub']
+    except Exception as e:
+        return jsonify({"error": "Authentication required", "details": str(e)}), 401
+    
+    if 'ref_photo' not in request.files:
+        return jsonify({"error": "A face photo is required."}), 400
+    
+    ref_photo = request.files['ref_photo']
+    if not allowed_file(ref_photo.filename):
+        return jsonify({"error": "Invalid file type."}), 400
+    
+    user = get_user(username)
+    if not user:
+        return jsonify({"error": "User not found."}), 404
+    
+    # Save new photo
+    filename = secure_filename(ref_photo.filename)
+    unique_name = f"{uuid.uuid4()}_{filename}"
+    local_path = os.path.join(UPLOAD_FOLDER, unique_name)
+    ref_photo.save(local_path)
+    
+    r2_path = f"user_profiles/{username}/{unique_name}"
+    upload_success, public_url = upload_to_r2(local_path, r2_path)
+    os.remove(local_path)
+    
+    if not upload_success:
+        return jsonify({"error": "Could not upload photo."}), 500
+    
+    # Delete old photo if exists
+    previous_path = user.ref_photo_path
+    if not update_user_reference_photo(username, r2_path):
+        delete_from_r2(r2_path)
+        return jsonify({"error": "Could not update photo."}), 500
+    
+    if previous_path and previous_path != r2_path:
+        delete_from_r2(previous_path)
+    
+    return jsonify({
+        "message": "Face photo updated successfully.",
+        "photo_url": public_url
     })
 
 
