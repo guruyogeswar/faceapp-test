@@ -4,18 +4,18 @@ import os
 
 # Cloudflare R2 Configuration
 R2_CONFIG = {
-    "endpoint_url": "https://7f6e79e9b8402a59fa23c2576cfa5195.r2.cloudflarestorage.com",
-    "bucket_name": "testing-storage",
-    "public_base_url": "https://pub-3b6ed244985a49a1b3add562e2f00617.r2.dev",
-    "aws_access_key_id": "6c251710b7d1334023b3ad08588b2fd1",
-    "aws_secret_access_key": "64aa1855f26617884501faff4e56d5ca527b1bbdabb2d2db6cc0506a686964fe",
+    "endpoint_url": "https://d77faf28a1998fdf6570b068d634e752.r2.cloudflarestorage.com",
+    "bucket_name": "aadhishree",
+    "public_base_url": "https://pub-6180e377c2f14a43a3176359c6bb99be.r2.dev",
+    "aws_access_key_id": "80a73a52e450366c3a7ff125169d33e5",
+    "aws_secret_access_key": "fa1e5a21ddfd0cee7f9bd7d818bedff884a9af7f50c5e005423685d7eeaa6865",
 }
 
 # JWT Secret Key
 JWT_SECRET = "pixelperfect-secure-albums-secret-key-2023"
 
 # ML API Base URL
-ML_API_BASE_URL = "http://localhost:8080/" 
+ML_API_BASE_URL = "https://face-recognition-ml-912427501420.us-central1.run.app/" 
 
 # Google OAuth Configuration (Replace with your actual credentials)
 GOOGLE_CLIENT_ID     = '200111791636-5ulrqjctdclgd58e5csi745svcaitt8m.apps.googleusercontent.com'

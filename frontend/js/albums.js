@@ -27,9 +27,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         accessLevelIcon: document.getElementById('access-level-icon'),
         accessLevelText: document.getElementById('access-level-text'),
         accessLevelSubtext: document.getElementById('access-level-subtext'),
+        uploadLoadingOverlay: document.getElementById('upload-loading-overlay'),
+        uploadProgressBar: document.getElementById('upload-progress-bar'),
+        uploadStatusText: document.getElementById('upload-status-text'),
         vipLinkContainer: document.getElementById('vip-link-container'),
         fullLinkContainer: document.getElementById('full-link-container'),
     };
+
+    // ... (rest of DOMElements properties usually, but we are inserting into the list. Wait, replace_file_content for DOMElements might be tricky if I don't see the whole block.
+    // Let's target the DOMElements block first to add the key, then the function.
+    // Actually, I can just add it to the DOMElements definition.
+
+    // Better approach:
+    // 1. Add 'uploadLoadingOverlay' etc to DOMElements.
+    // 2. Update handlePhotoUpload to use it.
+
+    // STARTING WITH DOMElements modification
+
 
     let currentUser = null;
     let isAttendee = false;
@@ -136,6 +150,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Track album select mode state
+    let isInAlbumSelectMode = false;
+    let selectedAlbumIds = new Set();
+
     function displayAlbums(albums) {
         if (!DOMElements.albumGrid || !DOMElements.noAlbumsMessage) return;
 
@@ -154,23 +172,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         albums.forEach(album => {
             const card = document.createElement('div');
-            card.className = 'album-card-item bg-white rounded-xl shadow-lg overflow-hidden group';
+            card.className = 'album-card-item bg-white rounded-xl shadow-lg overflow-hidden group transition-all duration-300';
+            card.dataset.albumId = album.id;
             const coverUrl = album.cover || `https://placehold.co/400x300/e0e0e0/777?text=${encodeURIComponent(album.name)}`;
 
             const photographerLabel = album.photographer || 'Photographer';
             const photographerInfo = isAttendee ? `<p class="text-xs text-gray-500 mt-1">by ${photographerLabel}</p>` : '';
             const shareButtonHTML = !isAttendee ? `
-                <div class="absolute top-2 right-2">
+                <div class="absolute top-2 right-2 z-10">
                     <button class="share-album-btn bg-black bg-opacity-40 text-white rounded-full h-9 w-9 flex items-center justify-center hover:bg-opacity-60 transition-opacity" data-album-id="${album.id}" title="Share Album">
                         <i class="fas fa-share-alt"></i>
                     </button>
                 </div>` : '';
+
+            // Selection indicator for albums (hidden by default)
+            const selectIndicator = `
+                <div class="album-select-indicator absolute top-2 left-2 h-7 w-7 rounded-full border-2 border-white bg-black/30 flex items-center justify-center transition-all duration-200 hidden z-10">
+                    <i class="fas fa-check text-white text-sm"></i>
+                </div>`;
 
             card.innerHTML = `
                 <div class="relative">
                     <div class="w-full h-48 bg-gray-200 overflow-hidden cursor-pointer img-container">
                         <img src="${coverUrl}" alt="${album.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                     </div>
+                    ${selectIndicator}
                     ${shareButtonHTML}
                 </div>
                 <div class="p-5 info-container cursor-pointer">
@@ -181,17 +207,109 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const viewTarget = `/event.html?photographer=${album.photographer}&album=${album.id}&type=vip`;
 
-            if (isAttendee) {
-                card.querySelector('.img-container').addEventListener('click', () => window.location.href = viewTarget);
-                card.querySelector('.info-container').addEventListener('click', () => window.location.href = viewTarget);
-            } else {
-                card.querySelector('.img-container').addEventListener('click', () => loadAlbumDetailView(album.id, album.name));
-                card.querySelector('.info-container').addEventListener('click', () => loadAlbumDetailView(album.id, album.name));
-            }
+            // Click handlers - behavior depends on mode
+            const handleAlbumClick = () => {
+                if (isInAlbumSelectMode) {
+                    toggleAlbumSelection(album.id, card);
+                } else {
+                    if (isAttendee) {
+                        window.location.href = viewTarget;
+                    } else {
+                        loadAlbumDetailView(album.id, album.name);
+                    }
+                }
+            };
+
+            card.querySelector('.img-container').addEventListener('click', handleAlbumClick);
+            card.querySelector('.info-container').addEventListener('click', handleAlbumClick);
 
             DOMElements.albumGrid.appendChild(card);
         });
     }
+
+    function toggleAlbumSelection(albumId, card) {
+        const indicator = card.querySelector('.album-select-indicator');
+
+        if (selectedAlbumIds.has(albumId)) {
+            selectedAlbumIds.delete(albumId);
+            card.classList.remove('ring-4', 'ring-red-500', 'ring-offset-2');
+            if (indicator) {
+                indicator.classList.add('hidden');
+                indicator.classList.remove('bg-red-500');
+            }
+        } else {
+            selectedAlbumIds.add(albumId);
+            card.classList.add('ring-4', 'ring-red-500', 'ring-offset-2');
+            if (indicator) {
+                indicator.classList.remove('hidden');
+                indicator.classList.add('bg-red-500');
+            }
+        }
+
+        updateAlbumSelectionUI();
+    }
+
+    function updateAlbumSelectionUI() {
+        const deleteBtn = document.getElementById('deleteSelectedBtn');
+        const countSpan = document.getElementById('selectedCount');
+
+        if (countSpan) countSpan.textContent = selectedAlbumIds.size;
+        if (deleteBtn) {
+            deleteBtn.disabled = selectedAlbumIds.size === 0;
+            if (selectedAlbumIds.size === 0) {
+                deleteBtn.classList.add('opacity-50');
+            } else {
+                deleteBtn.classList.remove('opacity-50');
+            }
+        }
+    }
+
+    function enterAlbumSelectMode() {
+        isInAlbumSelectMode = true;
+        selectedAlbumIds.clear();
+
+        // Show all selection indicators
+        document.querySelectorAll('.album-card-item').forEach(card => {
+            const indicator = card.querySelector('.album-select-indicator');
+            if (indicator) indicator.classList.remove('hidden');
+        });
+
+        // Update UI
+        const toggleBtn = document.getElementById('toggleDeleteModeBtn');
+        const toggleBtnText = document.getElementById('deleteModeBtnText');
+        const deleteBtn = document.getElementById('deleteSelectedBtn');
+
+        if (toggleBtnText) toggleBtnText.textContent = 'Cancel';
+        if (toggleBtn) toggleBtn.classList.add('bg-red-100', 'text-red-600', 'border-red-600');
+        if (deleteBtn) deleteBtn.style.display = 'flex';
+
+        updateAlbumSelectionUI();
+    }
+
+    function exitAlbumSelectMode() {
+        isInAlbumSelectMode = false;
+        selectedAlbumIds.clear();
+
+        // Hide all selection indicators and remove selection styling
+        document.querySelectorAll('.album-card-item').forEach(card => {
+            card.classList.remove('ring-4', 'ring-red-500', 'ring-offset-2');
+            const indicator = card.querySelector('.album-select-indicator');
+            if (indicator) {
+                indicator.classList.add('hidden');
+                indicator.classList.remove('bg-red-500');
+            }
+        });
+
+        // Update UI
+        const toggleBtn = document.getElementById('toggleDeleteModeBtn');
+        const toggleBtnText = document.getElementById('deleteModeBtnText');
+        const deleteBtn = document.getElementById('deleteSelectedBtn');
+
+        if (toggleBtnText) toggleBtnText.textContent = 'Select to Delete';
+        if (toggleBtn) toggleBtn.classList.remove('bg-red-100', 'text-red-600', 'border-red-600');
+        if (deleteBtn) deleteBtn.style.display = 'none';
+    }
+
 
     function setAccessLevel(type) {
         if (!DOMElements.accessLevelIcon) return; // Guard clause
@@ -278,38 +396,132 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Track current select mode state globally within the albums module
+    let isInSelectMode = false;
+    let selectedPhotoIds = new Set();
+    let currentAlbumPhotos = [];
+
     function displayAlbumPhotos(photos) {
         if (!DOMElements.photoGrid || !DOMElements.noPhotosMessage) return;
 
         DOMElements.photoGrid.innerHTML = '';
-        const hasPhotos = photos && photos.length > 0;
+        currentAlbumPhotos = photos || [];
+        const hasPhotos = currentAlbumPhotos.length > 0;
 
         DOMElements.noPhotosMessage.style.display = hasPhotos ? 'none' : 'block';
         DOMElements.photoGrid.style.display = hasPhotos ? 'grid' : 'none';
 
         if (!hasPhotos) return;
 
-        photos.forEach(photo => {
+        currentAlbumPhotos.forEach(photo => {
             const photoItem = document.createElement('div');
-            photoItem.className = 'photo-item group relative aspect-square rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-300';
+            photoItem.className = 'photo-item group relative aspect-square rounded-lg overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300';
+            photoItem.dataset.photoId = photo.id;
             photoItem.innerHTML = `
                 <img src="${photo.url}" alt="${photo.name}" class="w-full h-full object-cover" loading="lazy">
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300"></div>
-                <input type="checkbox" class="absolute top-2 right-2 h-5 w-5 rounded text-primary focus:ring-primary-dark opacity-0 group-hover:opacity-100 photo-checkbox transition-opacity duration-300" data-photo-id="${photo.id}">
+                <div class="photo-overlay absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300"></div>
+                <div class="photo-select-indicator absolute top-2 right-2 h-7 w-7 rounded-full border-2 border-white bg-black/30 flex items-center justify-center transition-all duration-200 hidden">
+                    <i class="fas fa-check text-white text-sm"></i>
+                </div>
                 <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/50 to-transparent">
                     <p class="text-white text-xs truncate">${photo.name}</p>
                 </div>
             `;
 
-            // Add click handler for lightbox
+            // Click handler - behavior depends on mode
             photoItem.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('photo-checkbox')) {
-                    openLightbox(photo, photos);
+                if (isInSelectMode) {
+                    togglePhotoSelection(photo.id, photoItem);
+                } else {
+                    openLightbox(photo, currentAlbumPhotos);
                 }
             });
 
             DOMElements.photoGrid.appendChild(photoItem);
         });
+    }
+
+    function togglePhotoSelection(photoId, photoItem) {
+        const indicator = photoItem.querySelector('.photo-select-indicator');
+
+        if (selectedPhotoIds.has(photoId)) {
+            selectedPhotoIds.delete(photoId);
+            photoItem.classList.remove('ring-4', 'ring-primary', 'ring-offset-2');
+            if (indicator) {
+                indicator.classList.add('hidden');
+                indicator.classList.remove('bg-primary');
+            }
+        } else {
+            selectedPhotoIds.add(photoId);
+            photoItem.classList.add('ring-4', 'ring-primary', 'ring-offset-2');
+            if (indicator) {
+                indicator.classList.remove('hidden');
+                indicator.classList.add('bg-primary');
+            }
+        }
+
+        updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+        const deleteBtn = document.getElementById('deleteSelectedPhotosBtn');
+        const countSpan = document.getElementById('selectedPhotoCount');
+
+        if (countSpan) countSpan.textContent = selectedPhotoIds.size;
+        if (deleteBtn) {
+            deleteBtn.disabled = selectedPhotoIds.size === 0;
+            if (selectedPhotoIds.size === 0) {
+                deleteBtn.classList.add('opacity-50');
+            } else {
+                deleteBtn.classList.remove('opacity-50');
+            }
+        }
+    }
+
+    function enterSelectMode() {
+        isInSelectMode = true;
+        selectedPhotoIds.clear();
+
+        // Show all selection indicators
+        document.querySelectorAll('.photo-item').forEach(item => {
+            const indicator = item.querySelector('.photo-select-indicator');
+            if (indicator) indicator.classList.remove('hidden');
+        });
+
+        // Update UI
+        const toggleBtn = document.getElementById('togglePhotoDeleteModeBtn');
+        const deleteBtnText = document.getElementById('photoDeleteModeBtnText');
+        const deleteBtn = document.getElementById('deleteSelectedPhotosBtn');
+
+        if (deleteBtnText) deleteBtnText.textContent = 'Cancel';
+        if (toggleBtn) toggleBtn.classList.add('bg-red-100', 'text-red-600', 'border-red-600');
+        if (deleteBtn) deleteBtn.style.display = 'flex';
+
+        updateSelectionUI();
+    }
+
+    function exitSelectMode() {
+        isInSelectMode = false;
+        selectedPhotoIds.clear();
+
+        // Hide all selection indicators and remove selection styling
+        document.querySelectorAll('.photo-item').forEach(item => {
+            item.classList.remove('ring-4', 'ring-primary', 'ring-offset-2');
+            const indicator = item.querySelector('.photo-select-indicator');
+            if (indicator) {
+                indicator.classList.add('hidden');
+                indicator.classList.remove('bg-primary');
+            }
+        });
+
+        // Update UI
+        const toggleBtn = document.getElementById('togglePhotoDeleteModeBtn');
+        const deleteBtnText = document.getElementById('photoDeleteModeBtnText');
+        const deleteBtn = document.getElementById('deleteSelectedPhotosBtn');
+
+        if (deleteBtnText) deleteBtnText.textContent = 'Select';
+        if (toggleBtn) toggleBtn.classList.remove('bg-red-100', 'text-red-600', 'border-red-600');
+        if (deleteBtn) deleteBtn.style.display = 'none';
     }
 
     function setupDetailViewEventListeners(albumId) {
@@ -332,68 +544,76 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Photo selection functionality
-        setupPhotoSelection();
+        setupPhotoSelection(albumId);
 
         // Lightbox functionality
         setupLightbox();
     }
 
-    function setupPhotoSelection() {
-        let selectedPhotos = [];
-        const actionBar = document.getElementById('photo-action-bar');
-        const selectionCount = document.getElementById('selection-count');
+    function setupPhotoSelection(albumId) {
+        const toggleBtn = document.getElementById('togglePhotoDeleteModeBtn');
+        const deleteBtn = document.getElementById('deleteSelectedPhotosBtn');
 
-        if (!DOMElements.photoGrid) return;
+        if (!toggleBtn || !deleteBtn) {
+            console.warn('Photo selection buttons not found');
+            return;
+        }
 
-        DOMElements.photoGrid.addEventListener('change', (e) => {
-            if (e.target.classList.contains('photo-checkbox')) {
-                const photoId = e.target.dataset.photoId;
-                if (e.target.checked) {
-                    selectedPhotos.push(photoId);
-                } else {
-                    selectedPhotos = selectedPhotos.filter(id => id !== photoId);
-                }
-
-                // Update selection UI
-                if (selectedPhotos.length > 0) {
-                    actionBar.style.display = 'flex';
-                    selectionCount.textContent = `${selectedPhotos.length} photo${selectedPhotos.length !== 1 ? 's' : ''} selected`;
-                } else {
-                    actionBar.style.display = 'none';
-                }
+        // Toggle select mode on/off
+        toggleBtn.addEventListener('click', () => {
+            if (isInSelectMode) {
+                exitSelectMode();
+            } else {
+                enterSelectMode();
             }
         });
 
-        // Clear selection button
-        const clearBtn = document.getElementById('clearSelectionBtn');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => {
-                selectedPhotos = [];
-                document.querySelectorAll('.photo-checkbox').forEach(cb => cb.checked = false);
-                actionBar.style.display = 'none';
-            });
-        }
+        // Handle delete button click
+        deleteBtn.addEventListener('click', async () => {
+            if (selectedPhotoIds.size === 0) {
+                showToast('No photos selected', 'warning');
+                return;
+            }
 
-        // Download selected button
-        const downloadBtn = document.getElementById('downloadSelectedBtn');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => {
-                // TODO: Implement bulk download functionality
-                showToast('Download functionality coming soon!', 'info');
-            });
-        }
+            if (!confirm(`Are you sure you want to delete ${selectedPhotoIds.size} photo(s)? This cannot be undone.`)) {
+                return;
+            }
 
-        // Delete selected button
-        const deleteBtn = document.getElementById('deleteSelectedBtn');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => {
-                if (confirm(`Are you sure you want to delete ${selectedPhotos.length} photo${selectedPhotos.length !== 1 ? 's' : ''}?`)) {
-                    // TODO: Implement bulk delete functionality
-                    showToast('Delete functionality coming soon!', 'info');
+            try {
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+                const response = await fetch(`/api/albums/${albumId}/photos/batch`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({ photo_ids: Array.from(selectedPhotoIds) })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to delete photos');
                 }
-            });
-        }
+
+                const result = await response.json();
+                showToast(`Successfully deleted ${result.deleted_count || selectedPhotoIds.size} photo(s)`, 'success');
+
+                // Exit select mode and reload photos
+                exitSelectMode();
+                loadAlbumPhotos(albumId);
+
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('Error: ' + error.message, 'error');
+            } finally {
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> <span>Delete (<span id="selectedPhotoCount">0</span>)</span>';
+            }
+        });
     }
+
 
     function setupLightbox() {
         const lightboxModal = document.getElementById('lightbox-modal');
@@ -473,12 +693,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const files = Array.from(event.target.files);
         if (files.length === 0) return;
 
-        showToast('Uploading photos...', 'info');
+        // Show overlay
+        if (DOMElements.uploadLoadingOverlay) {
+            DOMElements.uploadLoadingOverlay.style.display = 'flex';
+            if (DOMElements.uploadProgressBar) DOMElements.uploadProgressBar.style.width = '0%';
+            if (DOMElements.uploadStatusText) DOMElements.uploadStatusText.textContent = `Preparing to upload ${files.length} photos...`;
+        }
 
         try {
             const token = localStorage.getItem('authToken');
+            let completedCount = 0;
 
-            for (const file of files) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                // Update specific status
+                if (DOMElements.uploadStatusText) {
+                    DOMElements.uploadStatusText.textContent = `Uploading ${i + 1} of ${files.length}: ${file.name}`;
+                }
+
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('album', albumId);
@@ -492,6 +725,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!response.ok) {
                     throw new Error(`Failed to upload ${file.name}`);
                 }
+
+                completedCount++;
+
+                // Update progress bar
+                if (DOMElements.uploadProgressBar) {
+                    const percentage = Math.round((completedCount / files.length) * 100);
+                    DOMElements.uploadProgressBar.style.width = `${percentage}%`;
+                }
             }
 
             showToast('Photos uploaded successfully!', 'success');
@@ -502,10 +743,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error('Upload error:', error);
             showToast('Failed to upload some photos', 'error');
+        } finally {
+            // Hide overlay
+            if (DOMElements.uploadLoadingOverlay) {
+                DOMElements.uploadLoadingOverlay.style.display = 'none';
+            }
+            // Reset the input
+            event.target.value = '';
         }
-
-        // Reset the input
-        event.target.value = '';
     }
 
     async function handleShareAlbumClick(albumId) {
@@ -576,6 +821,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (DOMElements.closeShareModalBtn) {
         DOMElements.closeShareModalBtn.addEventListener('click', () => DOMElements.shareModal.style.display = 'none');
     }
+
+    // Album selection mode toggle
+    const albumToggleBtn = document.getElementById('toggleDeleteModeBtn');
+    const albumDeleteBtn = document.getElementById('deleteSelectedBtn');
+
+    if (albumToggleBtn) {
+        albumToggleBtn.addEventListener('click', () => {
+            if (isInAlbumSelectMode) {
+                exitAlbumSelectMode();
+            } else {
+                enterAlbumSelectMode();
+            }
+        });
+    }
+
+    if (albumDeleteBtn) {
+        albumDeleteBtn.addEventListener('click', async () => {
+            if (selectedAlbumIds.size === 0) {
+                showToast('No albums selected', 'warning');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete ${selectedAlbumIds.size} album(s)? All photos in these albums will be permanently deleted.`)) {
+                return;
+            }
+
+            try {
+                albumDeleteBtn.disabled = true;
+                albumDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+                const response = await fetch('/api/albums/batch', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({ album_ids: Array.from(selectedAlbumIds) })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to delete albums');
+                }
+
+                const result = await response.json();
+                showToast(`Successfully deleted ${result.deleted_count || selectedAlbumIds.size} album(s)`, 'success');
+
+                // Exit select mode and reload albums
+                exitAlbumSelectMode();
+                fetchAlbums();
+
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('Error: ' + error.message, 'error');
+            } finally {
+                albumDeleteBtn.disabled = false;
+                albumDeleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> <span>Delete (<span id="selectedCount">0</span>)</span>';
+            }
+        });
+    }
+
 
     async function copyShareLink(inputElement) {
         if (!inputElement) {

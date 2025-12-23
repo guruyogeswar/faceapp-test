@@ -64,3 +64,11 @@ Albums must exist in **both** R2 storage AND SQLite database for VIP access to w
 - R2 stores the actual photos
 - SQLite stores album metadata and user access permissions
 - If albums exist in R2 but not in DB, run manual SQL INSERT to sync them
+
+## Deployment
+### ML Service (Cloud Run)
+- **Service Name**: `face-recognition-ml`
+- **URL**: `https://face-recognition-ml-5tvmlyr7ia-uc.a.run.app`
+- **Region**: `us-central1`
+- **Resources**: 2 CPUs, 2Gi Memory
+- **Code**: `docker/` folder (FastAPI)

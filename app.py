@@ -1,15 +1,17 @@
 # app.py
 
 import os
-from flask import Flask, request, jsonify, send_from_directory, redirect, url_for, session
+from flask import Flask, request, jsonify, send_from_directory, redirect, url_for, session, Response
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import uuid
 import requests
 import traceback
+import zipfile
+import io
 
 from config import ML_API_BASE_URL
-from r2_storage import upload_to_r2, list_objects, get_object_url, delete_from_r2
+from r2_storage import upload_to_r2, list_objects, get_object_url, delete_from_r2, get_object_bytes
 from db import (
     add_user,
     get_user,
@@ -803,6 +805,86 @@ def delete_photos_batch(album_id):
 
 
 # --- VIP Registration (Simplified - No Password) ---
+
+@app.route('/api/download', methods=['GET'])
+def download_photo():
+    """Proxy download endpoint for photos - bypasses CORS issues and sets proper headers"""
+    photo_key = request.args.get('key')
+    filename = request.args.get('filename', 'photo.jpg')
+    
+    if not photo_key:
+        return jsonify({"error": "Photo key is required"}), 400
+    
+    try:
+        # Get the bytes from R2
+        photo_bytes, content_type, error = get_object_bytes(photo_key)
+        
+        if error or photo_bytes is None:
+            return jsonify({"error": f"Could not fetch photo: {error}"}), 404
+        
+        # Return as attachment with Content-Disposition header
+        return Response(
+            photo_bytes,
+            mimetype=content_type,
+            headers={
+                'Content-Disposition': f'attachment; filename="{filename}"',
+                'Content-Length': str(len(photo_bytes))
+            }
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": "Download failed", "details": str(e)}), 500
+
+
+@app.route('/api/download-zip', methods=['POST'])
+def download_photos_as_zip():
+    """Create a ZIP file containing multiple photos and return it as a single download"""
+    data = request.get_json()
+    photo_keys = data.get('photo_keys', [])
+    zip_filename = data.get('filename', 'photos.zip')
+    
+    if not photo_keys:
+        return jsonify({"error": "No photo keys provided"}), 400
+    
+    try:
+        # Create in-memory ZIP file
+        zip_buffer = io.BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for i, key in enumerate(photo_keys):
+                try:
+                    # Get photo bytes from R2
+                    photo_bytes, content_type, error = get_object_bytes(key)
+                    
+                    if photo_bytes:
+                        # Extract filename from key
+                        filename = key.split('/')[-1] if '/' in key else key
+                        # Ensure unique filenames in case of duplicates
+                        name_parts = filename.rsplit('.', 1)
+                        if len(name_parts) == 2:
+                            unique_filename = f"{name_parts[0]}_{i+1}.{name_parts[1]}"
+                        else:
+                            unique_filename = f"{filename}_{i+1}"
+                        
+                        zip_file.writestr(unique_filename, photo_bytes)
+                except Exception as e:
+                    print(f"Failed to add {key} to zip: {e}")
+                    continue
+        
+        zip_buffer.seek(0)
+        
+        return Response(
+            zip_buffer.getvalue(),
+            mimetype='application/zip',
+            headers={
+                'Content-Disposition': f'attachment; filename="{zip_filename}"',
+                'Content-Length': str(len(zip_buffer.getvalue()))
+            }
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": "ZIP creation failed", "details": str(e)}), 500
+
 
 @app.route('/api/auth/vip-register', methods=['POST'])
 def vip_register():

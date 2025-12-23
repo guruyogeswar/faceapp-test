@@ -140,3 +140,21 @@ def delete_from_r2(r2_object_key):
         error_msg = f"Error deleting {r2_object_key} from R2: {e}"
         print(error_msg)
         return False, error_msg
+
+def get_object_bytes(object_key):
+    """Download an object's bytes from R2 for proxied download
+    
+    Args:
+        object_key: The key of the object in R2
+        
+    Returns:
+        Tuple (bytes_data, content_type, error_message)
+    """
+    try:
+        response = s3.get_object(Bucket=R2_CONFIG["bucket_name"], Key=object_key)
+        body = response['Body'].read()
+        content_type = response.get('ContentType', 'application/octet-stream')
+        return body, content_type, None
+    except Exception as e:
+        print(f"Error getting object bytes from R2: {e}")
+        return None, None, str(e)

@@ -117,26 +117,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- NEW: Force Download Helper ---
-    // This function fetches the image and uses a Blob to trigger a "Save As" dialog.
-    const forceDownload = async (url, fileName) => {
+    // --- Force Download Helper ---
+    // Uses backend proxy to bypass CORS and set proper Content-Disposition headers
+    const forceDownload = (url, fileName) => {
+        // Extract the R2 key from the URL (everything after the bucket URL)
+        // URL format: https://pub-xxx.r2.dev/event_albums/photographer/album/photo.jpg
+        // We need: event_albums/photographer/album/photo.jpg
+
+        let photoKey = '';
         try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const objectUrl = window.URL.createObjectURL(blob);
-
-            const link = document.createElement('a');
-            link.href = objectUrl;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            window.URL.revokeObjectURL(objectUrl); // Clean up the object URL
-        } catch (error) {
-            console.error('Download failed for:', fileName, error);
-            alert(`Could not download ${fileName}. Please check the console for errors.`);
+            const urlObj = new URL(url);
+            // Remove leading slash from pathname
+            photoKey = urlObj.pathname.startsWith('/') ? urlObj.pathname.slice(1) : urlObj.pathname;
+        } catch (e) {
+            // Fallback: try to extract path from URL string
+            const pathMatch = url.match(/r2\.dev\/(.+)$/);
+            if (pathMatch) {
+                photoKey = pathMatch[1];
+            } else {
+                console.error('Could not parse URL:', url);
+                window.open(url, '_blank'); // Fallback: open in new tab
+                return;
+            }
         }
+
+        // Use the backend proxy endpoint
+        const downloadUrl = `/api/download?key=${encodeURIComponent(photoKey)}&filename=${encodeURIComponent(fileName)}`;
+
+        // Create a hidden link and click it
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     // --- Lightbox Functions ---
@@ -158,9 +173,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const photo = currentlyDisplayedPhotos[currentLightboxIndex];
         if (!photo) return;
 
+        // Derive name from URL if not available
+        let photoName = photo.name;
+        if (!photoName && photo.url) {
+            const urlParts = photo.url.split('/');
+            photoName = urlParts[urlParts.length - 1] || `photo_${currentLightboxIndex + 1}.jpg`;
+            // Remove UUID prefix if present
+            if (photoName.includes('_')) {
+                const afterUnderscore = photoName.substring(photoName.indexOf('_') + 1);
+                if (afterUnderscore && afterUnderscore.includes('.')) {
+                    photoName = afterUnderscore;
+                }
+            }
+        }
+        photoName = photoName || `photo_${currentLightboxIndex + 1}.jpg`;
+
         lightboxImage.src = photo.url;
-        lightboxImage.alt = photo.name;
-        lightboxCaption.textContent = photo.name;
+        lightboxImage.alt = photoName;
+        lightboxCaption.textContent = photoName;
         lightboxCounter.textContent = `${currentLightboxIndex + 1} of ${currentlyDisplayedPhotos.length}`;
 
         // Update navigation buttons
@@ -168,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lightboxNext.disabled = currentLightboxIndex === currentlyDisplayedPhotos.length - 1;
 
         // Update download button
-        lightboxDownload.onclick = () => forceDownload(photo.url, photo.name);
+        lightboxDownload.onclick = () => forceDownload(photo.url, photoName);
     };
 
     const navigateLightbox = (direction) => {
@@ -194,12 +224,31 @@ document.addEventListener('DOMContentLoaded', () => {
         photosContainer.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
 
         photos.forEach((photo, index) => {
+            // Derive photo name from URL if not provided (VIP search only returns url/score)
+            const photoUrl = photo.url || '';
+            let photoName = photo.name;
+            if (!photoName && photoUrl) {
+                // Extract filename from URL: https://...r2.dev/event_albums/.../filename.jpg
+                const urlParts = photoUrl.split('/');
+                photoName = urlParts[urlParts.length - 1] || `photo_${index + 1}.jpg`;
+                // Remove UUID prefix if present (e.g., "abc123_original.jpg" -> "original.jpg")
+                if (photoName.includes('_')) {
+                    const underscoreIdx = photoName.indexOf('_');
+                    const afterUnderscore = photoName.substring(underscoreIdx + 1);
+                    // Only use part after underscore if it looks like a filename
+                    if (afterUnderscore && afterUnderscore.includes('.')) {
+                        photoName = afterUnderscore;
+                    }
+                }
+            }
+            photoName = photoName || `photo_${index + 1}.jpg`;
+
             const photoCard = document.createElement('div');
             photoCard.className = 'photo-item aspect-square bg-gray-200 rounded-lg overflow-hidden group relative cursor-pointer';
             photoCard.innerHTML = `
-                <img src="${photo.url}" alt="${photo.name}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy">
+                <img src="${photoUrl}" alt="${photoName}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy">
                 <div class="photo-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <button data-url="${photo.url}" data-name="${photo.name}" class="photo-download-btn absolute top-2 right-2 h-10 w-10 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" title="Download Photo">
+                <button data-url="${photoUrl}" data-name="${photoName}" class="photo-download-btn absolute top-2 right-2 h-10 w-10 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10" title="Download Photo">
                     <i class="fas fa-download text-white text-lg"></i>
                 </button>
                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -406,24 +455,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
 
-    // MODIFIED: Listener for the "Download All" button.
-    downloadAllBtn.addEventListener('click', () => {
+    // MODIFIED: Listener for the "Download All" button - uses ZIP endpoint
+    downloadAllBtn.addEventListener('click', async () => {
         if (currentlyDisplayedPhotos.length === 0) {
             alert("There are no photos to download.");
             return;
         }
 
-        // Show a dialog to the user explaining what will happen.
+        // Show a dialog to the user
         const userConfirmed = confirm(
-            `You are about to download ${currentlyDisplayedPhotos.length} photos.\n\nYour browser will ask you to save each file individually. Do you want to continue?`
+            `You are about to download ${currentlyDisplayedPhotos.length} photos as a ZIP file. Continue?`
         );
 
         if (userConfirmed) {
-            currentlyDisplayedPhotos.forEach((photo, index) => {
-                setTimeout(() => {
-                    forceDownload(photo.url, photo.name);
-                }, index * 1000); // Stagger downloads by 1 second to be safe
-            });
+            try {
+                downloadAllBtn.disabled = true;
+                downloadAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+
+                // Extract R2 keys from URLs
+                const photoKeys = currentlyDisplayedPhotos.map(photo => {
+                    try {
+                        const urlObj = new URL(photo.url);
+                        return urlObj.pathname.startsWith('/') ? urlObj.pathname.slice(1) : urlObj.pathname;
+                    } catch (e) {
+                        const pathMatch = photo.url.match(/r2\.dev\/(.+)$/);
+                        return pathMatch ? pathMatch[1] : null;
+                    }
+                }).filter(key => key !== null);
+
+                if (photoKeys.length === 0) {
+                    throw new Error('Could not extract photo keys from URLs');
+                }
+
+                // Call ZIP endpoint
+                const response = await fetch('/api/download-zip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        photo_keys: photoKeys,
+                        filename: `${currentAlbum || 'photos'}_${Date.now()}.zip`
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create ZIP file');
+                }
+
+                // Download the ZIP
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${currentAlbum || 'photos'}.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+            } catch (error) {
+                console.error('Download all error:', error);
+                alert('Failed to download photos: ' + error.message);
+            } finally {
+                downloadAllBtn.disabled = false;
+                downloadAllBtn.innerHTML = '<i class="fas fa-download"></i> Download All';
+            }
         }
     });
 
