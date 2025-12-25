@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
         guest: document.getElementById('view-guest'),
         gallery: document.getElementById('view-gallery'),
     };
+    // new breadcrumb elements
+    const breadcrumbAlbumsLink = document.getElementById('breadcrumb-albums-link');
+    const breadcrumbSeparator = document.getElementById('breadcrumb-separator');
     const loadingMessage = document.getElementById('loading-message');
     const loadingSubtext = document.getElementById('loading-subtext');
     const eventTitleGuest = document.getElementById('event-title-guest');
@@ -298,6 +301,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Store for later use
         currentPhotographer = photographer;
         currentAlbum = album;
+
+        // Show Breadcrumb "Albums /" if logged in
+        const token = localStorage.getItem('authToken');
+        if (token && breadcrumbAlbumsLink && breadcrumbSeparator) {
+            breadcrumbAlbumsLink.classList.remove('hidden');
+            breadcrumbSeparator.classList.remove('hidden');
+        }
 
         if (!photographer || !album || !linkType) {
             stopLoadingAnimation();

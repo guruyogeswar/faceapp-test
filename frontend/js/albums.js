@@ -530,6 +530,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (breadcrumbAlbums) {
             breadcrumbAlbums.addEventListener('click', (e) => {
                 e.preventDefault();
+                fetchAlbums(); // Refresh album list to update counts
                 switchView('manage-albums-view');
             });
         }

@@ -257,7 +257,14 @@
 
         <div id="view-gallery" class="hidden">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                <h1 id="event-title-main" class="text-3xl font-bold text-dark-color"></h1>
+                <div class="flex items-center space-x-2 text-3xl font-bold text-dark-color">
+                    <!-- Breadcrumb: Albums Link (Hidden by default) -->
+                    <a href="albums.html" id="breadcrumb-albums-link"
+                        class="hidden text-gray-400 hover:text-primary transition-colors">Albums</a>
+                    <span id="breadcrumb-separator" class="hidden text-gray-300">/</span>
+                    <h1 id="event-title-main"></h1>
+                </div>
+
                 <button id="download-all-btn"
                     class="w-full sm:w-auto flex-shrink-0 bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center space-x-2">
                     <i class="fas fa-download"></i>
