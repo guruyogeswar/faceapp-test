@@ -14,11 +14,15 @@ R2_CONFIG = {
 # JWT Secret Key
 JWT_SECRET = "pixelperfect-secure-albums-secret-key-2023"
 
-# ML API Base URL
-ML_API_BASE_URL = "https://face-recognition-ml-912427501420.us-central1.run.app/" 
+# ML API Base URL - InsightFace on Cloud Run
+ML_API_BASE_URL = "https://face-recognition-ml-912427501420.us-central1.run.app/"
+# ML_API_BASE_URL = "http://localhost:8080/"  # Local testing
 
 # Google OAuth Configuration (Replace with your actual credentials)
 GOOGLE_CLIENT_ID     = '200111791636-5ulrqjctdclgd58e5csi745svcaitt8m.apps.googleusercontent.com'
 GOOGLE_CLIENT_SECRET = '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'
 
 REDIRECT_URI = "https://gravience.com/oauth2/callback" 
+
+# Watermark Configuration
+WATERMARK_LOGO_PATH = os.path.join(os.path.dirname(__file__), "frontend", "uploads", "Aaadishree Logo with Box Right.png")

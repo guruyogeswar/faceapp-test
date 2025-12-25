@@ -10,7 +10,8 @@ import traceback
 import zipfile
 import io
 
-from config import ML_API_BASE_URL
+from config import ML_API_BASE_URL, WATERMARK_LOGO_PATH
+from PIL import Image, ImageOps
 from r2_storage import upload_to_r2, list_objects, get_object_url, delete_from_r2, get_object_bytes
 from db import (
     add_user,
@@ -41,6 +42,38 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'heic'}
+
+
+def apply_watermark(image_path, logo_path=WATERMARK_LOGO_PATH):
+    """Apply watermark logo to top-right corner of image."""
+    try:
+        # Load and fix EXIF rotation
+        base_image = Image.open(image_path)
+        base_image = ImageOps.exif_transpose(base_image)
+        base_image = base_image.convert("RGBA")
+        
+        # Load logo
+        logo = Image.open(logo_path).convert("RGBA")
+        
+        # Resize logo to 1/8th of image width
+        base_width, base_height = base_image.size
+        logo_width = base_width // 10
+        logo_ratio = logo_width / logo.width
+        logo_height = int(logo.height * logo_ratio)
+        logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
+        
+        # Position: top-right corner
+        position = (base_width - logo.width, 0)
+        
+        # Paste logo
+        base_image.paste(logo, position, logo)
+        
+        # Save result (overwrite original)
+        base_image.convert("RGB").save(image_path, quality=95)
+        return True
+    except Exception as e:
+        print(f"Watermark error: {e}")
+        return False
 
 
 def _local_reference_photo_path(ref_photo_path: str) -> str:
@@ -154,6 +187,10 @@ def google_signup_finalize_page():
 @app.route('/event.html')
 def event_page():
     return send_from_directory('frontend', 'event.html')
+
+@app.route('/admin')
+def admin_page():
+    return send_from_directory('frontend', 'admin.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
@@ -295,7 +332,7 @@ def update_profile_photo():
     if not allowed_file(avatar_file.filename):
         return jsonify({"error": "Unsupported file type."}), 400
 
-    max_bytes = 3 * 1024 * 1024
+    max_bytes = 20 * 1024 * 1024
     file_size = avatar_file.content_length
     if file_size is None:
         try:
@@ -309,7 +346,7 @@ def update_profile_photo():
         if content_length and content_length > max_bytes:
             file_size = content_length
     if file_size and file_size > max_bytes:
-        return jsonify({"error": "File too large. Max size is 3 MB."}), 400
+        return jsonify({"error": "File too large. Max size is 20 MB."}), 400
 
     filename = secure_filename(avatar_file.filename)
     unique_name = f"{uuid.uuid4()}_{filename}"
@@ -542,6 +579,12 @@ def upload_single_file_route():
         local_path = os.path.join(UPLOAD_FOLDER, unique_name)
         file_to_upload.save(local_path)
         
+        # Apply watermark before uploading
+        if os.path.exists(WATERMARK_LOGO_PATH):
+            apply_watermark(local_path)
+        else:
+            print(f"Warning: Watermark logo not found at {WATERMARK_LOGO_PATH}")
+        
         r2_path = f"event_albums/{username}/{album_id}/{unique_name}"
         upload_success, public_url = upload_to_r2(local_path, r2_path)
         os.remove(local_path)
@@ -655,7 +698,7 @@ def find_my_photos(photographer_username, album_id):
         api_endpoint = f"{ML_API_BASE_URL}find_similar_faces/"
         
         files_payload = { "file": ("reference_image.jpg", ref_photo_bytes, "image/jpeg") }
-        data_payload = { "embedding_file": embedding_file_name }
+        data_payload = { "embedding_file": embedding_file_name, "threshold": "0.34" }
         
         ml_response = requests.post(api_endpoint, files=files_payload, data=data_payload, timeout=60)
         ml_response.raise_for_status()
